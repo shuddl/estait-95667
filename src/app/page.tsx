@@ -28,8 +28,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => (
         <Image
           src={property.thumbnailUrl || '/placeholder.jpg'}
           alt={`View of ${property.address.streetAddress}`}
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: 'cover' }}
+          sizes="(max-width: 768px) 100vw, 320px"
         />
       </div>
       <div className="p-5">
@@ -122,9 +123,8 @@ const Home: React.FC = () => {
   // Custom scroll style to hide scrollbar
   const scrollStyle: CSSProperties = {
     scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-    WebkitScrollbar: { display: 'none' } as React.CSSProperties
-  };
+    msOverflowStyle: 'none'
+  } as CSSProperties;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col justify-between p-8">

@@ -9,9 +9,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 // USER & AUTHENTICATION TYPES
 // ============================================================================
 
-export interface User extends FirebaseUser {
-  // Extended user properties if needed
-}
+export type User = FirebaseUser;
 
 export interface AuthContextType {
   user: User | null;
@@ -47,18 +45,23 @@ export interface ChatMessage {
   text: string;
   sender: 'user' | 'ai';
   timestamp: number;
-  data?: any; // For property search results or other structured data
+  data?: unknown; // For property search results or other structured data
 }
 
 export interface AIResponse {
   action: 'add_lead' | 'create_task' | 'search_properties' | 'unknown';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   responseToUser: string;
 }
 
 export interface ProcessAgentCommandResponse {
   responseToUser: string;
-  data?: any; // Property search results or other action data
+  data?: {
+    confidence?: number;
+    suggestedFollowUps?: string[];
+    properties?: Property[];
+    [key: string]: unknown;
+  };
 }
 
 // ============================================================================
@@ -163,7 +166,7 @@ export interface AnalyticsData {
 // API RESPONSE TYPES
 // ============================================================================
 
-export interface WiseAgentResponse<T = any> {
+export interface WiseAgentResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -235,9 +238,7 @@ export interface SignupFormData {
 // COMPONENT PROP TYPES
 // ============================================================================
 
-export interface DashboardProps {
-  // Add specific props if needed
-}
+export type DashboardProps = Record<string, unknown>;
 
 export interface PropertyDetailsProps {
   params: {
@@ -262,11 +263,13 @@ export type VoidFunction = () => void;
 export type ErrorHandler = (error: Error | unknown) => void;
 
 // Type guard functions
-export function isProperty(obj: any): obj is Property {
-  return obj && typeof obj.id === 'string' && typeof obj.price === 'number';
+export function isProperty(obj: unknown): obj is Property {
+  const prop = obj as Record<string, unknown>;
+  return !!prop && typeof prop.id === 'string' && typeof prop.price === 'number';
 }
 
-export function isChatMessage(obj: any): obj is ChatMessage {
-  return obj && typeof obj.id === 'string' && typeof obj.text === 'string' && 
-         (obj.sender === 'user' || obj.sender === 'ai');
+export function isChatMessage(obj: unknown): obj is ChatMessage {
+  const msg = obj as Record<string, unknown>;
+  return !!msg && typeof msg.id === 'string' && typeof msg.text === 'string' && 
+         (msg.sender === 'user' || msg.sender === 'ai');
 }

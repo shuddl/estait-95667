@@ -1,18 +1,100 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && 
+        request.resource.data.keys().hasAll(['email', 'createdAt']) &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // CRM tokens - highly sensitive, only accessible by token owner
+    match /crm_tokens/{tokenId} {
+      allow read, write: if isAuthenticated() && 
+        (tokenId.matches('.*_' + request.auth.uid) || 
+         tokenId.matches(request.auth.uid + '_.*'));
+      allow delete: if isOwner(tokenId.split('_')[0]) || isAdmin();
+    }
+    
+    // Conversations - private to each user
+    match /conversations/{conversationId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // Contacts - accessible by owner only
+    match /contacts/{contactId} {
+      allow read, write: if isAuthenticated() && 
+        resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isOwner(resource.data.ownerId) || isAdmin();
+    }
+    
+    // Properties - readable by all authenticated users, writable by agents
+    match /properties/{propertyId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.agentId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.agentId == request.auth.uid;
+      allow delete: if isOwner(resource.data.agentId) || isAdmin();
+    }
+    
+    // Tasks - private to each user
+    match /tasks/{taskId} {
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // Analytics - read-only for authenticated users
+    match /analytics/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side writes
+    }
+    
+    // System configuration - admin only
+    match /config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Audit logs - write-only from server, read by admin
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only server-side writes
+    }
+    
+    // Default deny all other access
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2025, 9, 13);
+      allow read, write: if false;
     }
   }
 }
