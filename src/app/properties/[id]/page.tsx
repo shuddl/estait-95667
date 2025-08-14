@@ -6,6 +6,7 @@ import Image from 'next/image';
 
 const functions = getFunctions();
 
+// Define the structure of the Property data we expect
 interface Property {
     photos: { href: string }[];
     address: { streetAddress: string };
@@ -16,9 +17,9 @@ interface Property {
     description: string;
 }
 
-// Define the expected PageProps for a Client Component in App Router
+// Define the correct props for a dynamic client page in Next.js 15+
 interface PageProps {
-  params: Promise<{ id: string }>; // params is now a Promise
+  params: Promise<{ id: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
@@ -28,11 +29,15 @@ const PropertyDetails = ({ params }: PageProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // This function will resolve the params promise and then fetch data
     const fetchPropertyDetails = async () => {
       try {
-        const resolvedParams = await params; // Await the params promise
+        // CORRECT FIX: Await the params promise to get the actual values
+        const resolvedParams = await params;
+        const propertyId = resolvedParams.id;
+
         const getPropertyDetails = httpsCallable(functions, 'getPropertyDetailsRealEstateAPI');
-        const { data } = await getPropertyDetails({ propertyId: resolvedParams.id });
+        const { data } = await getPropertyDetails({ propertyId });
         setProperty(data as Property);
       } catch (err) {
         setError('Failed to fetch property details.');
@@ -42,23 +47,20 @@ const PropertyDetails = ({ params }: PageProps) => {
       }
     };
 
-    // Do not call fetchPropertyDetails directly here based on params.id
-    // The useEffect dependency array handles reactivity
     fetchPropertyDetails();
-
-  }, [params]); // Depend on params object itself
+  }, [params]); // The effect depends on the promise object itself
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <p>Loading...</p>
+      <div className="container mx-auto p-4 text-center">
+        <p>Loading Property...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 text-center">
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -66,7 +68,7 @@ const PropertyDetails = ({ params }: PageProps) => {
 
   if (!property) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 text-center">
         <p>Property not found.</p>
       </div>
     );
