@@ -2,7 +2,6 @@
  * Type definitions for Firebase Functions
  */
 
-import { Request, Response } from 'firebase-functions';
 import { CallableContext } from 'firebase-functions/v1/https';
 
 // ============================================================================
@@ -22,7 +21,8 @@ export interface VertexAIContent {
 
 export interface VertexAIRequest {
   contents: VertexAIContent[];
-  systemInstruction?: {
+  systemInstruction?: string | {
+    role: string;
     parts: Array<{ text: string }>;
   };
 }
@@ -125,3 +125,6 @@ export interface AuthenticatedContext extends CallableContext {
 export function isAuthenticated(context: CallableContext): context is AuthenticatedContext {
   return context.auth !== undefined && context.auth !== null;
 }
+
+// Re-export Express types for convenience
+export type { Request, Response } from 'express';

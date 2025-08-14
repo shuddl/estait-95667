@@ -16,8 +16,7 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => (
   <div className="flex-shrink-0 w-80 bg-black rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-100/10">
-    <Link href={`/properties/${property.id}`} passHref legacyBehavior>
-      <a>
+    <Link href={`/properties/${property.id}`}>
         <div className="relative h-48">
           <Image
             src={property.images?.[0] || '/placeholder.jpg'}
@@ -35,7 +34,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => (
             <span>{property.squareFeet.toLocaleString()} sqft</span>
           </div>
         </div>
-      </a>
     </Link>
   </div>
 );

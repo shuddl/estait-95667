@@ -1,11 +1,10 @@
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { VertexAI } from "@google-cloud/vertexai";
 import { encrypt, decrypt } from "./lib/security";
 import { corsMiddleware } from "./lib/cors";
-import type {
+import {
   AIResponse,
-  VertexAIRequest,
   CRMType,
   WiseAgentContact,
   WiseAgentTask,
@@ -16,7 +15,6 @@ import type {
   ProcessAgentCommandResponse,
   WiseAgentAuthResponse,
   OAuthCallbackQuery,
-  AuthenticatedContext,
   isAuthenticated
 } from "./types";
 
@@ -77,9 +75,9 @@ async function getAiResponse(commandText: string): Promise<AIResponse> {
     }
   `;
 
-  const request: VertexAIRequest = {
-    contents: [{ role: 'user', parts: [{ text: commandText }] }],
-    systemInstruction: { parts: [{ text: systemPrompt }] },
+  const request = {
+    contents: [{ role: 'user' as const, parts: [{ text: commandText }] }],
+    systemInstruction: systemPrompt,
   };
 
   const result = await generativeModel.generateContent(request);
