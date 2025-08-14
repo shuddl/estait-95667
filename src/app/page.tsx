@@ -1,80 +1,127 @@
 
+'use client';
+import React, { useState, useEffect, CSSProperties } from 'react';
 import Link from 'next/link';
 import Logo from './components/Logo';
-import React from 'react';
+import Image from 'next/image';
 
-const FeatureCard = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
-    <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white/20 text-center">
-        <div className="text-5xl mb-4">{icon}</div>
-        <h3 className="text-2xl font-bold mb-3">{title}</h3>
-        <p className="text-white/80">{children}</p>
+interface Property {
+    id: string;
+    thumbnailUrl?: string;
+    address: { streetAddress: string };
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    livingArea: { value: number };
+}
+
+const PropertyCard = ({ property }: { property: Property }) => (
+    <div className="flex-shrink-0 w-80 bg-black rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-100/10">
+        <Link href={`/properties/${property.id}`} passHref>
+            
+                <div className="relative h-48">
+                    <Image
+                        src={property.thumbnailUrl || '/placeholder.jpg'}
+                        alt={`View of ${property.address.streetAddress}`}
+                        layout="fill"
+                        objectFit="cover"
+                    />
+                </div>
+                <div className="p-5">
+                    <h3 className="text-xl font-bold text-white truncate">{property.address.streetAddress}</h3>
+                    <p className="text-lg font-semibold text-white mt-1">${property.price.toLocaleString()}</p>
+                    <div className="mt-4 flex justify-between text-white/50 text-sm">
+                        <span>{property.bedrooms} beds</span>
+                        <span>{property.bathrooms} baths</span>
+                        <span>{property.livingArea.value.toLocaleString()} sqft</span>
+                    </div>
+                </div>
+            
+        </Link>
     </div>
 );
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#98BF64] to-[#FFB833] text-white">
-      <header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <Logo />
-            <nav className="flex items-center gap-4">
-              <Link href="/login" legacyBehavior>
-                <a className="font-medium hover:text-black transition-colors">Login</a>
-              </Link>
-              <Link href="/signup" legacyBehavior>
-                <a className="bg-white text-[#98BF64] px-6 py-2 rounded-full hover:bg-black hover:text-white font-bold transition-all transform hover:scale-105">
-                  Sign Up
-                </a>
-              </Link>
-            </nav>
-          </div>
+const Home = () => {
+    const [typedText, setTypedText] = useState('');
+    const [property, setProperty] = useState<Property[]>([]);
+    const textToType = 'Search for properties in Austin, TX';
+    const typingSpeed = 100;
+
+    useEffect(() => {
+        const typingTimeout = setTimeout(() => {
+            if (typedText.length < textToType.length) {
+                setTypedText(textToType.slice(0, typedText.length + 1));
+            }
+        }, typingSpeed);
+
+        return () => clearTimeout(typingTimeout);
+    }, [typedText]);
+
+    useEffect(() => {
+        const fetchProperties = async () => {
+            const mockProperties: Property[] = [
+                { id: '1', thumbnailUrl: '/placeholder.jpg', address: { streetAddress: '123 Main St' }, price: 500000, bedrooms: 3, bathrooms: 2, livingArea: { value: 2000 } },
+                { id: '2', thumbnailUrl: '/placeholder.jpg', address: { streetAddress: '456 Oak Ave' }, price: 750000, bedrooms: 4, bathrooms: 3, livingArea: { value: 2500 } },
+                { id: '3', thumbnailUrl: '/placeholder.jpg', address: { streetAddress: '789 Pine Ln' }, price: 625000, bedrooms: 3, bathrooms: 2.5, livingArea: { value: 2200 } },
+                { id: '4', thumbnailUrl: '/placeholder.jpg', address: { streetAddress: '101 Maple Dr' }, price: 850000, bedrooms: 5, bathrooms: 4, livingArea: { value: 3000 } },
+                { id: '5', thumbnailUrl: '/placeholder.jpg', address: { streetAddress: '212 Birch Rd' }, price: 450000, bedrooms: 2, bathrooms: 2, livingArea: { value: 1800 } },
+            ];
+            setProperty(mockProperties);
+        };
+
+        fetchProperties();
+    }, []);
+
+    const scrollStyle: CSSProperties = {
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
+    }
+
+    return (
+        <div className="min-h-screen bg-black text-white flex flex-col justify-between p-8">
+            <header className="w-full">
+                <div className="container mx-auto flex items-center justify-between h-20">
+                    <Logo />
+                    <nav className="flex items-center gap-4">
+                        <Link href="/login">
+                            <span className="font-medium hover:text-white/50 transition-colors cursor-pointer">Login</span>
+                        </Link>
+                        <Link href="/signup">
+                            <span className="bg-white text-black px-6 py-2 rounded-full hover:bg-black hover:text-white font-bold transition-all transform hover:scale-105 border border-white">
+                                Sign Up
+                            </span>
+                        </Link>
+                    </nav>
+                </div>
+            </header>
+
+            <main className="flex-grow flex flex-col items-center justify-center text-center">
+                <div className="w-full max-w-2xl">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={typedText}
+                            readOnly
+                            className="w-full px-6 py-4 bg-black border border-gray-100/10 rounded-full text-center text-lg focus:outline-none focus:ring-2 focus:ring-white/50 transition"
+                        />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-black rounded-full flex items-center justify-center border border-gray-100/10 hover:bg-white/5 transition-transform transform hover:scale-110">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <footer className="w-full">
+                <div className="container mx-auto">
+                    <div className="flex overflow-x-auto space-x-6 pb-6" style={scrollStyle}>
+                        {property.map(prop => (
+                            <PropertyCard key={prop.id} property={prop} />
+                        ))}
+                    </div>
+                </div>
+            </footer>
         </div>
-      </header>
+    );
+};
 
-      <main>
-        <section className="py-24 sm:py-32 text-center">
-          <div className="container mx-auto px-4">
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-              Your Real Estate Workflow,
-              <br />
-              <span className="text-black">Supercharged.</span>
-            </h1>
-            <p className="mt-6 max-w-2xl mx-auto text-xl text-white/90">
-              Estait is the conversational AI assistant that unifies your CRM, MLS, and communications. Close deals faster. Work smarter.
-            </p>
-            <div className="mt-10">
-              <Link href="/signup" legacyBehavior>
-                <a className="inline-block bg-white text-black px-10 py-4 rounded-full hover:bg-black hover:text-white font-bold text-lg transition-all transform hover:scale-105 shadow-2xl">
-                  Get Started for Free
-                </a>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <FeatureCard icon="🤝" title="Unified CRM">
-                Connect seamlessly with Wise Agent and Follow Up Boss. Your contacts, your tasks, all in one place.
-              </FeatureCard>
-              <FeatureCard icon="🏠" title="Intelligent Search">
-                Find the perfect properties for your clients with our advanced, AI-powered MLS search.
-              </FeatureCard>
-              <FeatureCard icon="🤖" title="Voice-Powered">
-                Use natural language to manage your day. Add contacts, create tasks, and get market insights on the go.
-              </FeatureCard>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="bg-transparent text-center py-8">
-        <div className="container mx-auto px-4">
-          <p>&copy; {new Date().getFullYear()} Estait. All rights reserved.</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
+export default Home;

@@ -16,7 +16,13 @@ interface Property {
     description: string;
 }
 
-const PropertyDetails = ({ params }: { params: { id: string } }) => {
+// Define the expected PageProps for a Client Component in App Router
+interface PageProps {
+  params: Promise<{ id: string }>; // params is now a Promise
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+const PropertyDetails = ({ params }: PageProps) => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +30,9 @@ const PropertyDetails = ({ params }: { params: { id: string } }) => {
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       try {
+        const resolvedParams = await params; // Await the params promise
         const getPropertyDetails = httpsCallable(functions, 'getPropertyDetailsRealEstateAPI');
-        const { data } = await getPropertyDetails({ propertyId: params.id });
+        const { data } = await getPropertyDetails({ propertyId: resolvedParams.id });
         setProperty(data as Property);
       } catch (err) {
         setError('Failed to fetch property details.');
@@ -35,10 +42,11 @@ const PropertyDetails = ({ params }: { params: { id: string } }) => {
       }
     };
 
-    if (params.id) {
-      fetchPropertyDetails();
-    }
-  }, [params.id]);
+    // Do not call fetchPropertyDetails directly here based on params.id
+    // The useEffect dependency array handles reactivity
+    fetchPropertyDetails();
+
+  }, [params]); // Depend on params object itself
 
   if (loading) {
     return (

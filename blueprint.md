@@ -1,52 +1,68 @@
-# Estait: Blueprint
+# Estait: Blueprint & Development Roadmap
 
-## 1. Overview
+## 1. Vision
 
-Estait is a mobile-first conversational AI layer designed to streamline the workflows of real estate agents. It integrates with existing CRM and MLS systems through natural language, providing a unified and efficient platform for managing contacts, properties, and tasks.
+To create an uncommon, ultra-minimalist conversational AI layer for real estate agents. The application will be a black and white, mobile-first interface that prioritizes extreme whitespace, super-thin lines, and ghost-like interactions. The primary user interface will be a chatbot that feels alive and intuitive.
 
-## 2. Architecture
+## 2. Design Philosophy
 
-The Estait application is built on a modern, serverless architecture that leverages the power of Next.js and Firebase.
+-   **Monochromatic Palette:** The application will use a strict black and white color scheme.
+-   **Extreme Whitespace:** All elements will have significant spacing to create a clean, uncluttered feel.
+-   **Super Thin Lines:** Borders and dividers will be barely visible (1px, `gray-100/10`) to provide structure without adding visual weight.
+-   **Ghost-like Interactions:** Hover and click effects will be subtle and refined, providing feedback without being distracting.
+-   **Animated Logo:** The `estait` logo will be animated to add a touch of life to the minimal interface.
 
-- **Frontend:** The frontend is a Next.js application that uses the App Router for file-based routing and server-side rendering. It is styled with Tailwind CSS and uses a mobile-first design approach.
-- **Backend:** The backend is a set of Firebase Cloud Functions that handle all the business logic, including user authentication, CRM integration, and natural language processing.
-- **Database:** The database is a Cloud Firestore database that stores all the application data, including user profiles, CRM tokens, and conversation history.
-- **Integrations:** The application integrates with the following services:
-    - **Firebase:** For authentication, database, and hosting.
-    - **Follow Up Boss:** For CRM integration.
-    - **Wise Agent:** For CRM integration.
-    - **RealEstateAPI.com:** For property search.
-    - **Dialogflow:** For natural language processing.
-    - **Google Cloud Speech-to-Text:** For voice transcription.
+## 3. Development Protocol
 
-## 3. Fully Operational Features
+All development will adhere to the following 5-step protocol. A task is not considered "done" until it passes all five stages:
 
-- **User Authentication:** Secure user sign-up and login with email and password.
-- **CRM Integration:** Seamless connection with Wise Agent and Follow Up Boss.
-- **Property Search:** Advanced search capabilities for MLS listings.
-- **Natural Language Processing (NLP):** Voice and text commands for intuitive interaction.
-- **Data Management:** Secure storage and management of user data, CRM tokens, conversations, and more.
-- **Modern UI/UX:** A visually appealing and intuitive user interface with a consistent brand identity.
-- **Loading and Error States:** Clear and consistent loading indicators and error messages throughout the application.
+1.  **Feature Implementation:** Write the code for the feature or fix.
+2.  **Strict Type Checking:** The code *must* compile with zero TypeScript errors under the project's `strict: true` configuration.
+3.  **Linter Pass:** The code *must* pass `npm run lint` with zero errors or warnings.
+4.  **Successful Production Build:** The entire project *must* build successfully via `npm run build`.
+5.  **Documentation Update:** This blueprint and any relevant code comments will be updated to reflect the changes.
 
-## 4. Development Roadmap
+---
 
-The following is a roadmap for the future development of the Estait application.
+## 4. Execution Plan & Roadmap
 
-### Phase 1: Advanced CRM Features
-- [ ] **Contact Synchronization:** Implement a two-way synchronization of contacts between Estait and the connected CRMs.
-- [ ] **Task Management:** Allow users to create, view, and manage tasks in their CRMs directly from the Estait interface.
-- [ ] **Calendar Integration:** Integrate with Google Calendar to allow users to schedule appointments and view their calendar from within the application.
-- [ ] **Email Integration:** Integrate with Gmail to allow users to send and receive emails from within the application.
+### **Phase 1: Eradication of Technical Debt & Build Stabilization (Current Phase)**
 
-### Phase 2: Enhanced Property Search
-- [ ] **Saved Searches:** Allow users to save their property search criteria for easy access later.
-- [ ] **Property Alerts:** Notify users when new properties that match their saved search criteria become available.
-- [ ] **MLS Integration:** Integrate with additional MLS providers to expand the property search capabilities.
+-   [ ] **Objective:** Achieve a 100% clean, successful production build.
+-   [ ] **Deliverables:**
+    -   [x] Create `TECHNICAL_DEBT.md` audit document.
+    -   [ ] Fix all TypeScript errors in all files (`.ts` and `.tsx`).
+    -   [ ] Fix all linting warnings.
+    -   [ ] Run `npx @next/codemod@latest new-link .` successfully.
+    -   [ ] Refactor `functions/src/index.ts` to use the correct architectural pattern.
+    -   [ ] Achieve a successful `npm run build`.
 
-### Phase 3: Polish and Performance
-- [ ] **UI/UX Refinements:** Continuously improve the user interface and user experience based on user feedback.
-- [ ] **Performance Optimization:** Optimize the performance of the application to ensure that it is fast and responsive.
-- [ ] **Testing:** Implement a comprehensive testing suite to ensure the quality and reliability of the application.
-- [ ] **Analytics:** Implement a more robust analytics solution to track user engagement and identify areas for improvement.
-- [ ] **Internationalization:** Add support for multiple languages to make the application accessible to a wider audience.
+### **Phase 2: Ultra-Minimalist Redesign**
+
+-   [ ] **Objective:** Transform the application's UI/UX to match the new design philosophy.
+-   [ ] **Deliverables:**
+    -   [ ] Create a new animated logo component.
+    -   [ ] Redesign the homepage (`/`) as a full-screen, chatbot-centric interface.
+        -   Implement "ghost typing" effect for example commands.
+        -   Implement the all-black, circular send button.
+    -   [ ] Add a horizontally-scrolling property card carousel to the homepage.
+    -   [ ] Redesign the `login`, `signup`, and `dashboard` pages to be monochromatic and minimalist.
+    -   [ ] Apply the new design system (whitespace, thin lines, etc.) globally.
+
+### **Phase 3: Advanced CRM & AI Functionality**
+
+-   [ ] **Objective:** Make the CRM and AI features more powerful and intuitive.
+-   [ ] **Deliverables:**
+    -   [ ] Enhance the CRM dashboard to display more useful information (e.g., upcoming tasks, recent notes).
+    -   [ ] Implement full two-way contact synchronization with connected CRMs.
+    -   [ ] Enhance the `processAgentCommand` function to handle more complex, multi-step conversations.
+    -   [ ] Add the ability to create and manage tasks in the CRM via the chat interface.
+
+### **Phase 4: Final Polish & Deployment**
+
+-   [ ] **Objective:** Prepare the application for a production launch.
+-   [ ] **Deliverables:**
+    -   [ ] Implement a comprehensive suite of unit and integration tests.
+    -   [ ] Optimize the application's performance.
+    -   [ ] Update this blueprint with a final list of all operational features.
+    -   [ ] Deploy the application to Firebase Hosting.

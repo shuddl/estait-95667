@@ -2,10 +2,11 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getPerformance } from 'firebase/performance';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -16,6 +17,7 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Initialize Firebase
 let app;
 if (!getApps().length) {
     app = initializeApp(firebaseConfig);
@@ -25,7 +27,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-let analytics;
+let analytics: Analytics | null = null; // Explicitly type analytics
 let perf;
 let appCheck;
 

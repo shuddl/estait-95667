@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, CSSProperties } from 'react';
 import { getFunctions, httpsCallable, HttpsCallable } from 'firebase/functions';
 import Link from 'next/link';
 import { analytics } from '../../../lib/firebase/firebase';
-import { logEvent, Analytics } from 'firebase/analytics';
+import { logEvent } from 'firebase/analytics';
 import Image from 'next/image';
 
 const functions = getFunctions();
@@ -61,7 +61,7 @@ const SearchResults = () => {
         const { data } = await searchProperties({ location: searchTerm });
         setProperties(data.properties || []);
         if (analytics) {
-            logEvent(analytics as Analytics, 'property_searched', { search_term: searchTerm });
+            logEvent(analytics, 'property_searched', { search_term: searchTerm });
         }
       } catch (err) {
         setError('Failed to fetch properties. Please try again.');
