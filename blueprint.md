@@ -19,23 +19,75 @@ The foundational Next.js project is set up with Firebase, and the initial UI com
 
 ---
 
-## 3. The Full Implementation Roadmap
+## 3. Concrete Development Plan: Technical Debt Resolution & Phase 1 Delivery
+
+This section provides a granular, step-by-step plan to achieve a stable, feature-complete Phase 1. Each step includes a clear deliverable, acceptance criteria, and a manual validation process.
+
+### **Step 1: Stabilize the Build Environment**
+
+**Goal:** Eradicate all configuration and dependency issues that prevent a successful build.
+
+*   **Action 1.1: Fix Invalid `firestore.indexes.json`**
+    *   **Deliverable:** A `firestore.indexes.json` file that is syntactically correct JSON.
+    *   **Acceptance Criteria:** The file must not contain any comments.
+    *   **Validation:** I will read the file and confirm it parses as valid JSON.
+
+*   **Action 1.2: Upgrade Next.js Link Components**
+    *   **Deliverable:** All `<Link>` components in the application will be updated to remove the deprecated `legacyBehavior` prop.
+    *   **Acceptance Criteria:** The `npx @next/codemod@latest new-link .` command runs successfully and modifies the relevant files.
+    *   **Validation:** I will manually inspect the `src/app/page.tsx`, `src/app/login/page.tsx`, and `src/app/signup/page.tsx` files to confirm the code has been updated. The preview server should show no related warnings.
+
+### **Step 2: Enforce Strict TypeScript Type-Safety**
+
+**Goal:** Eliminate all TypeScript errors by ensuring every part of the codebase is explicitly typed.
+
+*   **Action 2.1: Type Frontend Components**
+    *   **Deliverable:** All pages and components in `src/app/` will have explicit types for props, state, and event handlers.
+    *   **Acceptance Criteria:** `npm run build` completes without any TypeScript errors related to files in `src/app/`.
+    *   **Validation:** I will execute `npm run build` and parse the output to confirm the absence of type errors.
+
+*   **Action 2.2: Type Backend Cloud Functions**
+    *   **Deliverable:** The `functions/src/index.ts` file will have explicit types for all function parameters and return values.
+    *   **Acceptance Criteria:** `npx eslint --config ./eslint.config.js .` within the `functions/` directory runs without errors.
+    *   **Validation:** I will execute the linting command and check for a successful exit code.
+
+### **Step 3: Refactor and Implement Core AI and CRM Logic**
+
+**Goal:** Re-architect the backend to be robust and implement the core functionality of Phase 1.
+
+*   **Action 3.1: Architect Internal Cloud Function Logic**
+    *   **Deliverable:** A refactored `functions/src/index.ts` where all core business logic resides in internal, private async functions. The public `onRequest` functions will be simple, secure wrappers.
+    - **Acceptance Criteria:** The `processAgentCommand` function no longer calls `onRequest` functions directly, but instead calls the new internal functions (e.g., `_addWiseAgentContact`).
+    - **Validation:** I will inspect the refactored code to ensure separation of concerns. The `firebase deploy --only functions` command (or emulator equivalent) should pass.
+
+*   **Action 3.2: Integrate Vertex AI (Gemini)**
+    *   **Deliverable:** A new function, `getAiResponse`, that communicates with the Vertex AI Gemini model. This includes a master system prompt that defines the AI's persona and required JSON output structure.
+    *   **Acceptance Criteria:** The function successfully sends a prompt to Vertex AI and receives a structured JSON response in the format `{ "action": "...", "parameters": {...}, "responseToUser": "..." }`.
+    *   **Validation:** I will write a temporary test case within a Cloud Function to call the Vertex AI service and log a valid response. This requires the **Vertex AI API to be enabled** and **Firebase secrets to be set** as outlined in the "Your Step-by-Step Directions" section below.
+
+*   **Action 3.3: Implement Wise Agent OAuth 2.0 Flow**
+    *   **Deliverable:** A secure, end-to-end OAuth 2.0 flow for Wise Agent. This includes:
+        1.  A `wiseAgentAuth` Cloud Function to initiate the flow.
+        2.  A `wiseAgentCallback` Cloud Function to handle the redirect, exchange the code for tokens, and securely store the encrypted tokens in Firestore.
+    *   **Acceptance Criteria:** A user can be redirected to Wise Agent, authorize the application, and have their tokens securely stored in the `/users/{userId}/credentials/wise_agent` document.
+    *   **Validation:** I will manually trigger the auth flow from the browser and inspect the Firestore database to confirm the encrypted tokens are stored correctly.
+
+*   **Action 3.4: Implement Core AI-to-CRM Actions**
+    *   **Deliverable:** The `processAgentCommand` function will now parse the Vertex AI response and execute CRM actions.
+    *   **Acceptance Criteria:**
+        1.  When the AI returns `{ "action": "add_lead", ... }`, the `_addWiseAgentContact` function is called with the correct parameters.
+        2.  When the AI returns `{ "action": "create_task", ... }`, the `_addWiseAgentTask` function is called with the correct parameters.
+    *   **Validation:** I will send test commands (e.g., "add a new lead John Doe 555-123-4567") to the `processAgentCommand` endpoint and verify in the logs that the correct internal Wise Agent functions are triggered.
+
+---
+
+## 4. The Full Implementation Roadmap
 
 This roadmap is divided into phases. Each phase includes my development actions and the specific, step-by-step directions for you to follow to provide the necessary credentials and configurations.
 
-### **Phase 1: Foundation - Vertex AI Core & Wise Agent Integration (Current Phase)**
+### **Phase 1: Foundation - Vertex AI Core & Wise Agent Integration (Complete after Step 3)**
 
 **Goal:** To establish a stable, intelligent core for the application by fully integrating Vertex AI and the first CRM.
-
-#### **My Development Actions:**
-1.  **Stabilize the Build:** Eradicate all remaining TypeScript and build errors to create a stable foundation.
-2.  **Re-architect to Vertex AI:** Remove the Dialogflow implementation from `functions/src/index.ts` and replace it with a direct integration to Vertex AI's Gemini model.
-3.  **Engineer the System Prompt:** Create a master "system prompt" for Gemini that instructs it on its persona (a professional real estate assistant), its capabilities, and the exact JSON structure it must return for each intent (`action`, `parameters`, `responseToUser`).
-4.  **Implement Wise Agent OAuth Flow:** Write the client-side and server-side code to handle the full OAuth 2.0 connection flow for Wise Agent using the credentials you have provided.
-5.  **Build Core AI Actions:** Connect the AI's response to the CRM. The `processAgentCommand` function will now be able to:
-    *   Parse the JSON from Vertex AI.
-    *   Call the internal `_addWiseAgentContact` function when the action is `add_lead`.
-    *   Call the internal `_addWiseAgentTask` function when the action is `create_task`.
 
 #### **Your Step-by-Step Directions for Phase 1:**
 
