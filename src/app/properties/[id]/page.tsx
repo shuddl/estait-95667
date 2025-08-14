@@ -6,17 +6,27 @@ import Image from 'next/image';
 
 const functions = getFunctions();
 
-const PropertyDetails = ({ params }) => {
-  const [property, setProperty] = useState(null);
+interface Property {
+    photos: { href: string }[];
+    address: { streetAddress: string };
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    livingArea: { value: number };
+    description: string;
+}
+
+const PropertyDetails = ({ params }: { params: { id: string } }) => {
+  const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       try {
         const getPropertyDetails = httpsCallable(functions, 'getPropertyDetailsRealEstateAPI');
         const { data } = await getPropertyDetails({ propertyId: params.id });
-        setProperty(data);
+        setProperty(data as Property);
       } catch (err) {
         setError('Failed to fetch property details.');
         console.error(err);

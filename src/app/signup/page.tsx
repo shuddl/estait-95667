@@ -1,6 +1,6 @@
 
 'use client';
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { signUp } from '../../lib/firebase/auth';
 import { createUserProfile } from '../../lib/firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -10,11 +10,11 @@ import Logo from '../components/Logo';
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -22,42 +22,43 @@ const SignUp = () => {
       const { user } = await signUp(email, password);
       await createUserProfile(user.uid, { email: user.email });
       router.push('/dashboard');
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#98BF64] to-[#FFB833]">
+    <div className="flex flex-col min-h-screen bg-black">
       <div className="flex-grow flex items-center justify-center">
-        <div className="w-full max-w-md p-10 space-y-6 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl m-4 border border-white/20">
+        <div className="w-full max-w-md p-10 space-y-8 bg-black rounded-2xl m-4 border border-gray-100/10">
           <div className="flex justify-center">
             <Logo />
           </div>
-          <h2 className="text-2xl font-bold text-center text-white">Create Your Account</h2>
           <form onSubmit={handleSignUp} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/80">Email address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 mt-1 border border-white/30 rounded-lg shadow-sm focus:ring-[#FFB833] focus:border-[#FFB833] transition bg-white/20 text-white placeholder-white/50"
+                className="w-full px-4 py-3 mt-1 border border-gray-100/10 rounded-lg shadow-sm focus:ring-white/50 focus:border-white/50 transition bg-white/5 text-white placeholder-white/50"
                 placeholder="you@example.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/80">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength="6"
-                className="w-full px-4 py-3 mt-1 border border-white/30 rounded-lg shadow-sm focus:ring-[#FFB833] focus:border-[#FFB833] transition bg-white/20 text-white placeholder-white/50"
+                minLength={6}
+                className="w-full px-4 py-3 mt-1 border border-gray-100/10 rounded-lg shadow-sm focus:ring-white/50 focus:border-white/50 transition bg-white/5 text-white placeholder-white/50"
                 placeholder="••••••••"
               />
             </div>
@@ -65,20 +66,18 @@ const SignUp = () => {
             <div>
               <button
                 type="submit"
-                className="w-full px-4 py-3 text-black bg-white rounded-lg hover:bg-black hover:text-white font-bold transition text-lg transform hover:scale-105"
+                className="w-full px-4 py-3 text-white bg-black rounded-full hover:bg-white/5 font-bold transition text-lg transform hover:scale-105 border border-gray-100/10"
                 disabled={loading}
               >
                 {loading ? 'Signing up...' : 'Sign up'}
               </button>
             </div>
           </form>
-          <div className="text-center text-sm text-white/80">
+          <div className="text-center text-sm text-white/50">
             <p>
               Already have an account?{' '}
-              <Link href="/login" legacyBehavior>
-                <a className="font-bold text-white hover:underline">
+              <Link href="/login" className="font-bold text-white hover:underline">
                   Log in
-                </a>
               </Link>
             </p>
           </div>

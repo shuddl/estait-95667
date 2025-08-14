@@ -1,5 +1,5 @@
 
-import * as cors from 'cors';
+import cors from 'cors';
 
 const allowedOrigins = [
     'http://localhost:3000',

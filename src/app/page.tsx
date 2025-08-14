@@ -1,8 +1,9 @@
 
 import Link from 'next/link';
 import Logo from './components/Logo';
+import React from 'react';
 
-const FeatureCard = ({ icon, title, children }) => (
+const FeatureCard = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
     <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-white/20 text-center">
         <div className="text-5xl mb-4">{icon}</div>
         <h3 className="text-2xl font-bold mb-3">{title}</h3>
