@@ -21,7 +21,7 @@ interface Property {
 
 const PropertyCard = ({ property }: { property: Property }) => (
     <div className="flex-shrink-0 w-80 bg-black rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-100/10">
-        <Link href={`/properties/${property.id}`} passHref>
+        <Link href={`/properties/${property.id}`} passHref legacyBehavior>
             
                 <div className="relative h-48">
                     <Image

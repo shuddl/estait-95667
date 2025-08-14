@@ -4,6 +4,7 @@ import React, { useState, useEffect, CSSProperties } from 'react';
 import Link from 'next/link';
 import Logo from './components/Logo';
 import Image from 'next/image';
+import AuthStatus from './components/AuthStatus';
 
 interface Property {
     id: string;
@@ -17,26 +18,24 @@ interface Property {
 
 const PropertyCard = ({ property }: { property: Property }) => (
     <div className="flex-shrink-0 w-80 bg-black rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-100/10">
-        <Link href={`/properties/${property.id}`} passHref>
-            
-                <div className="relative h-48">
-                    <Image
-                        src={property.thumbnailUrl || '/placeholder.jpg'}
-                        alt={`View of ${property.address.streetAddress}`}
-                        layout="fill"
-                        objectFit="cover"
-                    />
+        <Link href={`/properties/${property.id}`}>
+            <div className="relative h-48">
+                <Image
+                    src={property.thumbnailUrl || '/placeholder.jpg'}
+                    alt={`View of ${property.address.streetAddress}`}
+                    layout="fill"
+                    objectFit="cover"
+                />
+            </div>
+            <div className="p-5">
+                <h3 className="text-xl font-bold text-white truncate">{property.address.streetAddress}</h3>
+                <p className="text-lg font-semibold text-white mt-1">${property.price.toLocaleString()}</p>
+                <div className="mt-4 flex justify-between text-white/50 text-sm">
+                    <span>{property.bedrooms} beds</span>
+                    <span>{property.bathrooms} baths</span>
+                    <span>{property.livingArea.value.toLocaleString()} sqft</span>
                 </div>
-                <div className="p-5">
-                    <h3 className="text-xl font-bold text-white truncate">{property.address.streetAddress}</h3>
-                    <p className="text-lg font-semibold text-white mt-1">${property.price.toLocaleString()}</p>
-                    <div className="mt-4 flex justify-between text-white/50 text-sm">
-                        <span>{property.bedrooms} beds</span>
-                        <span>{property.bathrooms} baths</span>
-                        <span>{property.livingArea.value.toLocaleString()} sqft</span>
-                    </div>
-                </div>
-            
+            </div>
         </Link>
     </div>
 );
@@ -83,14 +82,7 @@ const Home = () => {
                 <div className="container mx-auto flex items-center justify-between h-20">
                     <Logo />
                     <nav className="flex items-center gap-4">
-                        <Link href="/login">
-                            <span className="font-medium hover:text-white/50 transition-colors cursor-pointer">Login</span>
-                        </Link>
-                        <Link href="/signup">
-                            <span className="bg-white text-black px-6 py-2 rounded-full hover:bg-black hover:text-white font-bold transition-all transform hover:scale-105 border border-white">
-                                Sign Up
-                            </span>
-                        </Link>
+                        <AuthStatus />
                     </nav>
                 </div>
             </header>
