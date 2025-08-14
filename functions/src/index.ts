@@ -1,288 +1,255 @@
 
-/**
- * This file contains all the cloud functions for the Estait application.
- *
- * @see https://firebase.google.com/docs/functions/
- */
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import axios from "axios";
 import { SpeechClient, protos } from "@google-cloud/speech";
-import { SessionsClient } from "@google-cloud/dialogflow";
+import { VertexAI } from "@google-cloud/vertexai";
 import { encrypt, decrypt } from "./lib/security";
 import { v4 as uuidv4 } from "uuid";
 import { corsMiddleware } from "./lib/cors";
 
-// Initialize Firebase Admin SDK
 admin.initializeApp();
 const speechClient = new SpeechClient();
-const dialogflowClient = new SessionsClient();
 
-// -----------------------------------------------------------------------------
-// INTERNAL HELPER FUNCTIONS (CORE LOGIC)
-// -----------------------------------------------------------------------------
+// Initialize Vertex AI
+const vertexAI = new VertexAI({ project: process.env.GCLOUD_PROJECT, location: 'us-central1' });
+const generativeModel = vertexAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
 
-async function _addWiseAgentContact(userId: string, contactDetails: { first_name: string, last_name: string, email_address: string, phone_number: string }) {
-    const tokenDoc = await admin.firestore().collection("crm_tokens").doc(`${userId}_wiseagent`).get();
-    if (!tokenDoc.exists || !tokenDoc.data()) {
-        throw new functions.https.HttpsError("failed-precondition", "Wise Agent CRM not connected.");
+// ============================================================================
+// 1. CORE AI LOGIC
+// ============================================================================
+
+/**
+ * Sends a command to the Vertex AI Gemini model and returns a structured response.
+ * @param commandText The natural language command from the user.
+ * @returns A structured AI response.
+ */
+async function getAiResponse(commandText: string) {
+    const systemPrompt = `
+      You are a professional real estate assistant named "Estait".
+      Your task is to understand a user's command and translate it into a specific, structured JSON format.
+      The JSON output MUST contain three fields: "action", "parameters", and "responseToUser".
+
+      Here are the possible actions and their required parameters:
+      1.  "add_lead":
+          - "firstName": The first name of the lead.
+          - "lastName": The last name of the lead.
+          - "email": The email address of the lead.
+          - "phone": The phone number of the lead.
+      2.  "create_task":
+          - "description": The description of the task.
+          - "dueDate": The due date of the task in YYYY-MM-DD format.
+      3.  "search_properties":
+          - "location": The city or neighborhood to search in.
+          - "minBeds": (Optional) The minimum number of bedrooms.
+          - "maxPrice": (Optional) The maximum price.
+      4.  "unknown":
+          - No parameters required. Use this if the command is unclear.
+
+      Based on the user's command, generate the appropriate JSON.
+      Example command: "add a new lead John Doe at john.doe@example.com, phone is 555-123-4567"
+      Example JSON output:
+      {
+        "action": "add_lead",
+        "parameters": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "email": "john.doe@example.com",
+          "phone": "555-123-4567"
+        },
+        "responseToUser": "I've added John Doe to your contacts."
+      }
+    `;
+
+    const request = {
+        contents: [{ role: 'user', parts: [{ text: commandText }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+    };
+
+    const result = await generativeModel.generateContent(request);
+    const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!responseText) {
+        throw new Error("Vertex AI returned an empty response.");
     }
-    const accessToken = decrypt(tokenDoc.data()?.accessToken);
 
+    // Clean the response to ensure it's valid JSON
+    const cleanedJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanedJson);
+}
+
+
+// ============================================================================
+// 2. CORE CRM & API LOGIC (INTERNAL HELPERS)
+// ============================================================================
+
+/**
+ * Retrieves valid, decrypted CRM access tokens from Firestore.
+ * @param userId The user's ID.
+ * @param crmType The type of CRM (e.g., "wise_agent").
+ * @returns The decrypted access token.
+ */
+async function _getAccessToken(userId: string, crmType: "wise_agent" | "follow_up_boss" | "real_geeks"): Promise<string> {
+    const tokenDoc = await admin.firestore().collection("users").doc(userId).collection("credentials").doc(crmType).get();
+    if (!tokenDoc.exists || !tokenDoc.data()) {
+        throw new functions.https.HttpsError("failed-precondition", `CRM ${crmType} is not connected for this user.`);
+    }
+    // TODO: Add token refresh logic here
+    return decrypt(tokenDoc.data()?.accessToken);
+}
+
+/**
+ * Adds a contact to Wise Agent.
+ * @param userId The user's ID.
+ * @param params The contact details from the AI response.
+ */
+async function _addWiseAgentContact(userId: string, params: any) {
+    const accessToken = await _getAccessToken(userId, "wise_agent");
     await axios.post("https://api.wiseagent.com/v2/contacts/add_new_contact", {
         Method: "add_new_contact",
         AuthToken: accessToken,
-        ...contactDetails,
+        first_name: params.firstName,
+        last_name: params.lastName,
+        email_address: params.email,
+        phone_number: params.phone,
     });
 }
 
-async function _addWiseAgentTask(userId: string, taskDetails: { description: string, due_date: string }) {
-    const tokenDoc = await admin.firestore().collection("crm_tokens").doc(`${userId}_wiseagent`).get();
-    if (!tokenDoc.exists || !tokenDoc.data()) {
-        throw new functions.https.HttpsError("failed-precondition", "Wise Agent CRM not connected.");
-    }
-    const accessToken = decrypt(tokenDoc.data()?.accessToken);
-
+/**
+ * Adds a task to Wise Agent.
+ * @param userId The user's ID.
+ * @param params The task details from the AI response.
+ */
+async function _addWiseAgentTask(userId: string, params: any) {
+    const accessToken = await _getAccessToken(userId, "wise_agent");
     await axios.post("https://api.wiseagent.com/v2/tasks/add_new_task", {
         Method: "add_new_task",
         AuthToken: accessToken,
-        ...taskDetails,
+        description: params.description,
+        due_date: params.dueDate,
     });
 }
 
-async function _searchProperties(searchCriteria: { location: string, minBeds: number, maxPrice: number }) {
-    const apiKey = functions.config().realestateapi.key;
+/**
+ * Searches for properties using the RealEstateAPI.com.
+ * @param params The search criteria from the AI response.
+ */
+async function _searchProperties(params: any) {
+    const apiKey = functions.config().realestateapi.key; // This should be set as a secret
     const response = await axios.get("https://api.realestateapi.com/v2/properties/search", {
-        params: searchCriteria,
+        params: {
+            location: params.location,
+            beds_min: params.minBeds,
+            price_max: params.maxPrice,
+        },
         headers: { "x-api-key": apiKey },
     });
     return response.data;
 }
 
 
-// -----------------------------------------------------------------------------
-// EXPORTED ONREQUEST CLOUD FUNCTIONS (HTTP WRAPPERS)
-// -----------------------------------------------------------------------------
+// ============================================================================
+// 3. EXPORTED ONREQUEST CLOUD FUNCTIONS (HTTP WRAPPERS)
+// ============================================================================
 
-export const initiateFollowUpBossOAuth = functions.https.onRequest((req, res) => {
-    corsMiddleware(req, res, () => {
-        const clientId = functions.config().followupboss.client_id;
-        const redirectUri = functions.config().followupboss.redirect_uri;
-        const scope = "people.read";
-        const state = `followupboss_${uuidv4()}`;
-        const authUrl = `https://app.followupboss.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-        res.json({ authUrl });
-    });
-});
+/**
+ * Main endpoint to process a user's natural language command.
+ * This function now acts as a controller, delegating tasks to other functions.
+ */
+export const processAgentCommand = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in to call this function.");
+    }
+    const { commandText } = data;
+    const userId = context.auth.uid;
 
-export const handleFollowUpBossOAuthCallback = functions.https.onRequest(async (req, res) => {
-    corsMiddleware(req, res, async () => {
-        try {
-            const { code, state } = req.query;
-            const userId = (state as string).split("_")[1]; // This is a simplified approach for demo
+    try {
+        const aiResponse = await getAiResponse(commandText);
+        let actionResult: any;
 
-            const clientId = functions.config().followupboss.client_id;
-            const clientSecret = functions.config().followupboss.client_secret;
-            const redirectUri = functions.config().followupboss.redirect_uri;
-    
-            const response = await axios.post("https://app.followupboss.com/oauth/token", {
-                grant_type: "authorization_code",
-                code,
-                client_id: clientId,
-                client_secret: clientSecret,
-                redirect_uri: redirectUri,
-            });
-    
-            const { access_token, refresh_token, expires_in } = response.data;
-    
-            await admin.firestore().collection("crm_tokens").doc(`${userId}_followupboss`).set({
-                userId,
-                crmType: "followupboss",
-                accessToken: encrypt(access_token),
-                refreshToken: encrypt(refresh_token),
-                expiresAt: Date.now() + expires_in * 1000,
-            });
-    
-            res.send("<html><body><h1>Connection Successful!</h1><p>You can now close this window.</p></body></html>");
-        } catch (error) {
-            console.error("Error handling Follow Up Boss OAuth callback:", error);
-            res.status(500).send("Authentication failed.");
+        switch (aiResponse.action) {
+            case "add_lead":
+                await _addWiseAgentContact(userId, aiResponse.parameters);
+                break;
+            case "create_task":
+                await _addWiseAgentTask(userId, aiResponse.parameters);
+                break;
+            case "search_properties":
+                actionResult = await _searchProperties(aiResponse.parameters);
+                break;
+            case "unknown":
+                break; // Do nothing, just return the AI's response
+            default:
+                throw new Error(`Unsupported AI action: ${aiResponse.action}`);
         }
-    });
+
+        return {
+            responseToUser: aiResponse.responseToUser,
+            data: actionResult // e.g., property search results
+        };
+
+    } catch (error) {
+        console.error("Error processing agent command:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError("internal", "An unexpected error occurred while processing your command.");
+    }
 });
 
-export const initiateWiseAgentOAuth = functions.https.onRequest((req, res) => {
-    corsMiddleware(req, res, () => {
-        const clientId = functions.config().wiseagent.client_id;
-        const redirectUri = functions.config().wiseagent.redirect_uri;
-        const scope = "profile contacts";
-        const state = `wiseagent_${uuidv4()}`;
-        const authUrl = `https://sync.thewiseagent.com/WiseAuth/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-        res.json({ authUrl });
-    });
+
+/**
+ * Initiates the OAuth 2.0 flow for Wise Agent.
+ */
+export const wiseAgentAuth = functions.https.onCall((data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+    }
+    const clientId = functions.config().wiseagent.client_id; // Should be a secret
+    const redirectUri = `https://${process.env.GCLOUD_PROJECT}.firebaseapp.com/wiseAgentCallback`;
+    
+    // Using the user's UID in the state parameter to securely identify them on callback
+    const state = context.auth.uid;
+    
+    const authUrl = `https://sync.thewiseagent.com/WiseAuth/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=profile%20contacts&state=${state}`;
+    
+    return { authUrl };
 });
 
-export const handleWiseAgentOAuthCallback = functions.https.onRequest(async (req, res) => {
+/**
+ * Handles the OAuth 2.0 callback from Wise Agent.
+ */
+export const wiseAgentCallback = functions.https.onRequest(async (req, res) => {
     corsMiddleware(req, res, async () => {
         try {
             const { code, state } = req.query;
-            const userId = (state as string).split("_")[1]; // Simplified for demo
+            if (!code || !state) {
+                throw new Error("Missing code or state from OAuth callback.");
+            }
 
+            const userId = state as string; // The state is the user's UID
             const clientId = functions.config().wiseagent.client_id;
             const clientSecret = functions.config().wiseagent.client_secret;
-    
+
             const response = await axios.post("https://sync.thewiseagent.com/WiseAuth/token", {
                 client_id: clientId,
                 client_secret: clientSecret,
                 code,
                 grant_type: "authorization_code",
             });
-    
+
             const { access_token, refresh_token, expires_at } = response.data;
-    
-            await admin.firestore().collection("crm_tokens").doc(`${userId}_wiseagent`).set({
-                userId,
-                crmType: "wiseagent",
+
+            // Store encrypted tokens securely in a subcollection for the user
+            await admin.firestore().collection("users").doc(userId).collection("credentials").doc("wise_agent").set({
                 accessToken: encrypt(access_token),
                 refreshToken: encrypt(refresh_token),
                 expiresAt: new Date(expires_at).getTime(),
             });
-    
-            res.send("<html><body><h1>Connection Successful!</h1><p>You can now close this window.</p></body></html>");
+
+            res.send("<html><body><h1>Connection to Wise Agent Successful!</h1><p>You can now close this window.</p></body></html>");
         } catch (error) {
             console.error("Error handling Wise Agent OAuth callback:", error);
-            res.status(500).send("Authentication failed.");
-        }
-    });
-});
-
-
-export const searchPropertiesRealEstateAPI = functions.https.onRequest(async (req, res) => {
-    corsMiddleware(req, res, async () => {
-        try {
-            const properties = await _searchProperties(req.body.data);
-            res.json(properties);
-        } catch (error) {
-            console.error("Error searching properties:", error);
-            res.status(500).send("Failed to search properties.");
-        }
-    });
-});
-
-export const transcribeAudio = functions.https.onRequest(async (req, res) => {
-    corsMiddleware(req, res, async () => {
-        try {
-            const { audioBytes } = req.body.data;
-            const audio = { content: audioBytes };
-            const config: protos.google.cloud.speech.v1.IRecognitionConfig = {
-                encoding: "LINEAR16",
-                sampleRateHertz: 16000,
-                languageCode: "en-US",
-            };
-            const request: protos.google.cloud.speech.v1.IRecognizeRequest = { audio, config };
-            
-            const [response] = await speechClient.recognize(request);
-            const transcription = response.results
-                ?.map((result: protos.google.cloud.speech.v1.ISpeechRecognitionResult) => result.alternatives?.[0].transcript)
-                .join("\n");
-            res.json({ transcription });
-        } catch (error) {
-            console.error("Error transcribing audio:", error);
-            res.status(500).send("Failed to transcribe audio.");
-        }
-    });
-});
-
-export const getWiseAgentContacts = functions.https.onRequest(async (req, res) => {
-    corsMiddleware(req, res, async () => {
-        try {
-            const userId = req.body.data.auth.uid;
-            const tokenDoc = await admin.firestore().collection("crm_tokens").doc(`${userId}_wiseagent`).get();
-            if (!tokenDoc.exists || !tokenDoc.data()) {
-                res.status(400).send("Wise Agent CRM not connected.");
-                return;
-            }
-            const accessToken = decrypt(tokenDoc.data()?.accessToken);
-
-            const response = await axios.post("https://api.wiseagent.com/v2/contacts/get_contacts", {
-                Method: "get_contacts",
-                AuthToken: accessToken,
-                limit: 5,
-            });
-
-            res.json(response.data);
-        } catch (error) {
-            console.error("Error getting Wise Agent contacts:", error);
-            res.status(500).send("Failed to get Wise Agent contacts.");
-        }
-    });
-});
-
-
-export const processAgentCommand = functions.https.onRequest(async (req, res) => {
-    corsMiddleware(req, res, async () => {
-        try {
-            const { commandText, sessionId, auth } = req.body.data;
-            const projectId = functions.config().dialogflow.project_id;
-            const sessionPath = dialogflowClient.projectAgentSessionPath(projectId, sessionId);
-    
-            const request = {
-                session: sessionPath,
-                queryInput: { text: { text: commandText, languageCode: "en-US" } },
-            };
-    
-            const [response] = await dialogflowClient.detectIntent(request);
-            const result = response.queryResult;
-
-            if (!result || !result.intent || !result.parameters || !result.parameters.fields) {
-                throw new Error("Invalid Dialogflow result");
-            }
-
-            const intentName = result.intent.displayName;
-            const parameters = result.parameters.fields;
-            let fulfillmentText = result.fulfillmentText || "I'm sorry, I couldn't process that.";
-
-            switch (intentName) {
-                case "add_lead_intent":
-                    const contact_details = {
-                        first_name: parameters.first_name.stringValue || "",
-                        last_name: parameters.last_name.stringValue || "",
-                        email_address: parameters.email_address.stringValue || "",
-                        phone_number: parameters.phone_number.stringValue || "",
-                    };
-                    await _addWiseAgentContact(auth.uid, contact_details);
-                    fulfillmentText = `I've added ${contact_details.first_name} ${contact_details.last_name} to your Wise Agent contacts.`;
-                    break;
-                
-                case "create_task_intent":
-                    const task_details = {
-                        description: parameters.description.stringValue || "",
-                        due_date: parameters.due_date.stringValue || "",
-                    };
-                    await _addWiseAgentTask(auth.uid, task_details);
-                    fulfillmentText = `I've created a new task in Wise Agent: "${task_details.description}".`;
-                    break;
-
-                case "search_property_intent":
-                    const search_criteria = {
-                        location: parameters.location.stringValue || "",
-                        minBeds: parameters.minBeds.numberValue || 0,
-                        maxPrice: parameters.maxPrice.numberValue || 0,
-                    };
-                    const propertiesResult = await _searchProperties(search_criteria);
-                    if (propertiesResult.properties && propertiesResult.properties.length > 0) {
-                        fulfillmentText = `I found ${propertiesResult.properties.length} properties matching your criteria in ${search_criteria.location}.`;
-                    } else {
-                        fulfillmentText = `I couldn't find any properties matching your criteria in ${search_criteria.location}.`;
-                    }
-                    break;
-            }
-
-            res.json({ fulfillmentText });
-        } catch (error) {
-            console.error("Error processing agent command:", error);
-            res.status(500).send("Failed to process agent command.");
+            res.status(500).send("Authentication failed. Please try again.");
         }
     });
 });
