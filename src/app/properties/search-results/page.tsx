@@ -98,7 +98,7 @@ const SearchResults: React.FC = () => {
   const scrollStyle: CSSProperties = {
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
-    WebkitScrollbar: { display: 'none' } as any
+    WebkitScrollbar: { display: 'none' } as React.CSSProperties
   };
 
   return (

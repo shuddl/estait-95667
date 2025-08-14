@@ -90,6 +90,7 @@ export interface PropertySearchResult {
 
 export interface ProcessAgentCommandData {
   commandText: string;
+  sessionId?: string;
 }
 
 export interface ProcessAgentCommandResponse {

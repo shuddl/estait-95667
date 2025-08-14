@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { logEvent, Analytics } from 'firebase/analytics';
 import Logo from '../components/Logo';
-import type { User, ChatMessage, Contact, ProcessAgentCommandResponse } from '@/types';
+import type { ChatMessage, Contact, ProcessAgentCommandResponse } from '@/types';
+import type { User } from 'firebase/auth';
 
 const functions = getFunctions();
 
@@ -37,14 +38,11 @@ const Dashboard: React.FC = () => {
   });
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>('');
-  const [sessionId, setSessionId] = useState<string>('');
   const [recentContacts, setRecentContacts] = useState<Contact[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    // Initialize session ID
-    setSessionId(uuidv4());
     
     // Auth state listener
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -148,12 +146,14 @@ const Dashboard: React.FC = () => {
     try {
       // Call the process agent command function
       const processAgentCommand: HttpsCallable<
-        { commandText: string }, 
+        { commandText: string; sessionId: string }, 
         ProcessAgentCommandResponse
       > = httpsCallable(functions, 'processAgentCommand');
       
+      const sessionId = uuidv4(); // Generate session ID for this conversation
       const { data } = await processAgentCommand({ 
-        commandText: currentChatInput
+        commandText: currentChatInput,
+        sessionId
       });
       
       // Add AI response to chat

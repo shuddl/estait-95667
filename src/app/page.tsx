@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Logo from './components/Logo';
 import Image from 'next/image';
 import AuthStatus from './components/AuthStatus';
-import type { Property } from '@/types';
 
 // Mock property type for landing page demo
 interface MockProperty {
@@ -124,7 +123,7 @@ const Home: React.FC = () => {
   const scrollStyle: CSSProperties = {
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
-    WebkitScrollbar: { display: 'none' } as any
+    WebkitScrollbar: { display: 'none' } as React.CSSProperties
   };
 
   return (
