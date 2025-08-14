@@ -11,7 +11,7 @@ const functions = getFunctions();
 
 const PropertyCard = ({ property }) => (
     <div className="flex-shrink-0 w-80 bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-        <Link href={`/properties/${property.id}`} passHref>
+        <Link href={`/properties/${property.id}`} passHref legacyBehavior>
             <div className="cursor-pointer">
                 <div className="relative h-48">
                     <Image
