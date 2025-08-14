@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -6,9 +7,7 @@ import { getPerformance } from 'firebase/performance';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  // TODO: Add your Firebase project's configuration here
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -33,9 +32,8 @@ let appCheck;
 if (typeof window !== 'undefined') {
     analytics = getAnalytics(app);
     perf = getPerformance(app);
-    // TODO: Add your reCAPTCHA v3 site key here
     appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('your-recaptcha-site-key'),
+        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || 'your-recaptcha-site-key'),
         isTokenAutoRefreshEnabled: true
     });
 }
