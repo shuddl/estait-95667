@@ -1,59 +1,88 @@
+
 'use client';
 import React, { useState } from 'react';
-import { signUp } from '../lib/firebase/auth';
-import { createUserProfile } from '../lib/firebase/firestore';
+import { signUp } from '../../lib/firebase/auth';
+import { createUserProfile } from '../../lib/firebase/firestore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Logo from '../components/Logo';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
     try {
       const { user } = await signUp(email, password);
       await createUserProfile(user.uid, { email: user.email });
       router.push('/dashboard');
     } catch (error) {
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Create your account</h2>
-        <form onSubmit={handleSignUp} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#98BF64] to-[#FFB833]">
+      <div className="flex-grow flex items-center justify-center">
+        <div className="w-full max-w-md p-10 space-y-6 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl m-4 border border-white/20">
+          <div className="flex justify-center">
+            <Logo />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
+          <h2 className="text-2xl font-bold text-center text-white">Create Your Account</h2>
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-white/80">Email address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 mt-1 border border-white/30 rounded-lg shadow-sm focus:ring-[#FFB833] focus:border-[#FFB833] transition bg-white/20 text-white placeholder-white/50"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white/80">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength="6"
+                className="w-full px-4 py-3 mt-1 border border-white/30 rounded-lg shadow-sm focus:ring-[#FFB833] focus:border-[#FFB833] transition bg-white/20 text-white placeholder-white/50"
+                placeholder="••••••••"
+              />
+            </div>
+            {error && <p className="text-center text-red-400 text-sm">{error}</p>}
+            <div>
+              <button
+                type="submit"
+                className="w-full px-4 py-3 text-black bg-white rounded-lg hover:bg-black hover:text-white font-bold transition text-lg transform hover:scale-105"
+                disabled={loading}
+              >
+                {loading ? 'Signing up...' : 'Sign up'}
+              </button>
+            </div>
+          </form>
+          <div className="text-center text-sm text-white/80">
+            <p>
+              Already have an account?{' '}
+              <Link href="/login" legacyBehavior>
+                <a className="font-bold text-white hover:underline">
+                  Log in
+                </a>
+              </Link>
+            </p>
           </div>
-          {error && <p className="text-red-500">{error}</p>}
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-            >
-              Sign up
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

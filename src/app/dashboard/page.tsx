@@ -1,12 +1,14 @@
+
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth, db, analytics } from '../lib/firebase/firebase';
+import { auth, db, analytics } from '../../lib/firebase/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { logEvent } from 'firebase/analytics';
+import Logo from '../components/Logo';
 
 const functions = getFunctions();
 
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [sessionId, setSessionId] = useState('');
+  const [recentContacts, setRecentContacts] = useState([]);
   const chatContainerRef = useRef(null);
   const router = useRouter();
 
@@ -36,6 +39,7 @@ const Dashboard = () => {
           const isConnected = doc.exists();
           if (isConnected && crmStatus.wiseagent === 'disconnected') {
             logEvent(analytics, 'crm_connected', { crm_name: 'wiseagent' });
+            fetchWiseAgentContacts();
           }
           setCrmStatus(prev => ({ ...prev, wiseagent: isConnected ? 'connected' : 'disconnected' }));
         });
@@ -57,13 +61,23 @@ const Dashboard = () => {
     }
   }, [chatMessages]);
 
+  const fetchWiseAgentContacts = async () => {
+    try {
+        const getWiseAgentContacts = httpsCallable(functions, 'getWiseAgentContacts');
+        const { data } = await getWiseAgentContacts();
+        setRecentContacts(data.contacts || []);
+    } catch (error) {
+        console.error('Error fetching Wise Agent contacts:', error);
+    }
+  };
+
   const handleConnect = async (crmName) => {
     setLoading(prev => ({ ...prev, [crmName]: true }));
     try {
       const initiateOAuth = httpsCallable(functions, `initiate${crmName.charAt(0).toUpperCase() + crmName.slice(1)}OAuth`);
       const { data } = await initiateOAuth();
       window.location.href = data.authUrl;
-    } catch (error) => {
+    } catch (error) {
       console.error(`Error initiating ${crmName} OAuth:`, error);
       setLoading(prev => ({ ...prev, [crmName]: false }));
     }
@@ -116,71 +130,103 @@ const Dashboard = () => {
     }
   };
 
+  if (!user) {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#98BF64] to-[#FFB833]">
+            <p className="text-white">Loading...</p>
+        </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: '#F5EBCD' }}>
-      <div className="w-full max-w-4xl p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold" style={{ color: '#98BF64' }}>Welcome, {user.email}!</h2>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-white rounded-md"
-            style={{ backgroundColor: '#FFB833' }}
-          >
-            Logout
-          </button>
-        </div>
-        <div className="pt-8">
-          <h3 className="text-xl font-bold text-center" style={{ color: '#98BF64' }}>Connect Your CRM</h3>
-          <div className="flex justify-center space-x-4 pt-4">
-            <button
-              onClick={() => handleConnect('followupboss')}
-              className={`px-4 py-2 text-white rounded-md ${crmStatus.followupboss === 'connected' ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
-              disabled={crmStatus.followupboss === 'connected' || loading.followupboss}
-            >
-              {loading.followupboss ? 'Connecting...' : crmStatus.followupboss === 'connected' ? 'Connected to Follow Up Boss' : 'Connect Follow Up Boss'}
-            </button>
-            <button
-              onClick={() => handleConnect('wiseagent')}
-              className={`px-4 py-2 text-white rounded-md ${crmStatus.wiseagent === 'connected' ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
-              disabled={crmStatus.wiseagent === 'connected' || loading.wiseagent}
-            >
-              {loading.wiseagent ? 'Connecting...' : crmStatus.wiseagent === 'connected' ? 'Connected to Wise Agent' : 'Connect Wise Agent'}
-            </button>
-          </div>
-        </div>
-        <div className="pt-8 text-center">
-          <button
-            onClick={() => router.push('/properties/search-results')}
-            className="px-4 py-2 text-white rounded-md"
-            style={{ backgroundColor: '#98BF64' }}
-          >
-            Property Search
-          </button>
-        </div>
-        <div className="pt-8">
-          <div className="w-full h-96 border rounded-lg p-4 overflow-y-auto" ref={chatContainerRef}>
-            {chatMessages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
-                <div className={`px-4 py-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                  {msg.text}
+    <div className="flex h-screen bg-gray-100">
+        <aside className="w-72 bg-white shadow-lg flex flex-col">
+            <div className="p-6">
+                <Logo />
+            </div>
+            <nav className="flex-grow p-4">
+                <ul className="space-y-2">
+                    <li>
+                        <a href="#" className="flex items-center p-3 text-lg font-medium rounded-lg bg-[#98BF64] text-white">Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="#" onClick={() => router.push('/properties/search-results')} className="flex items-center p-3 text-lg font-medium rounded-lg text-gray-700 hover:bg-gray-200">Property Search</a>
+                    </li>
+                </ul>
+            </nav>
+            <div className="p-4 border-t border-gray-200">
+                <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-white bg-red-500 rounded-lg hover:bg-red-600 font-bold transition"
+                >
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main className="flex-1 flex flex-col bg-gray-50">
+            <header className="bg-white shadow-sm p-6 border-b border-gray-200">
+                <h2 className="text-3xl font-bold text-gray-800">Welcome, {user.email}!</h2>
+                <p className="text-gray-500">Here&apos;s your real estate command center.</p>
+            </header>
+            <div className="flex-1 p-8 overflow-y-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-md border">
+                        <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Connect Your CRM</h3>
+                        <div className="flex flex-col space-y-4">
+                            <button
+                                onClick={() => handleConnect('followupboss')}
+                                className={`px-4 py-3 text-white font-bold rounded-lg transition transform hover:scale-105 ${crmStatus.followupboss === 'connected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                disabled={crmStatus.followupboss === 'connected' || loading.followupboss}
+                            >
+                                {loading.followupboss ? 'Connecting...' : crmStatus.followupboss === 'connected' ? 'Connected to Follow Up Boss' : 'Connect Follow Up Boss'}
+                            </button>
+                            <button
+                                onClick={() => handleConnect('wiseagent')}
+                                className={`px-4 py-3 text-white font-bold rounded-lg transition transform hover:scale-105 ${crmStatus.wiseagent === 'connected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                                disabled={crmStatus.wiseagent === 'connected' || loading.wiseagent}
+                            >
+                                {loading.wiseagent ? 'Connecting...' : crmStatus.wiseagent === 'connected' ? 'Connected to Wise Agent' : 'Connect Wise Agent'}
+                            </button>
+                        </div>
+                        {crmStatus.wiseagent === 'connected' && (
+                            <div className="mt-6">
+                                <h4 className="text-lg font-bold text-gray-800 mb-2">Recent Contacts</h4>
+                                <ul className="space-y-2">
+                                    {recentContacts.map(contact => (
+                                        <li key={contact.id} className="text-gray-600">{contact.first_name} {contact.last_name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md border flex flex-col" style={{height: '65vh'}}>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-4">Chat with Estait</h3>
+                        <div className="flex-1 overflow-y-auto p-4 bg-gray-100 rounded-lg mb-4" ref={chatContainerRef}>
+                            {chatMessages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+                                    <div className={`px-5 py-3 rounded-2xl shadow-md max-w-lg ${msg.sender === 'user' ? 'bg-[#98BF64] text-white' : 'bg-white text-gray-800'}`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleChatSubmit} className="flex">
+                            <input
+                                type="text"
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                className="flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#98BF64] transition"
+                                placeholder="Type your command..."
+                            />
+                            <button type="submit" className="px-6 py-3 text-white bg-[#FFB833] rounded-r-lg hover:bg-[#E6A01A] transition font-bold">
+                                Send
+                            </button>
+                        </form>
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <form onSubmit={handleChatSubmit} className="flex mt-4">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              className="flex-grow px-3 py-2 border rounded-l-md focus:outline-none"
-              placeholder="Type your command..."
-            />
-            <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded-r-md">
-              Send
-            </button>
-          </form>
-        </div>
-      </div>
+            </div>
+        </main>
     </div>
   );
 };

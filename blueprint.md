@@ -4,59 +4,49 @@
 
 Estait is a mobile-first conversational AI layer designed to streamline the workflows of real estate agents. It integrates with existing CRM and MLS systems through natural language, providing a unified and efficient platform for managing contacts, properties, and tasks.
 
-## 2. Features
+## 2. Architecture
 
-### Core
-- **Authentication:** Secure user sign-up and login with email and password.
-- **Dashboard:** A central hub for accessing all features.
+The Estait application is built on a modern, serverless architecture that leverages the power of Next.js and Firebase.
+
+- **Frontend:** The frontend is a Next.js application that uses the App Router for file-based routing and server-side rendering. It is styled with Tailwind CSS and uses a mobile-first design approach.
+- **Backend:** The backend is a set of Firebase Cloud Functions that handle all the business logic, including user authentication, CRM integration, and natural language processing.
+- **Database:** The database is a Cloud Firestore database that stores all the application data, including user profiles, CRM tokens, and conversation history.
+- **Integrations:** The application integrates with the following services:
+    - **Firebase:** For authentication, database, and hosting.
+    - **Follow Up Boss:** For CRM integration.
+    - **Wise Agent:** For CRM integration.
+    - **RealEstateAPI.com:** For property search.
+    - **Dialogflow:** For natural language processing.
+    - **Google Cloud Speech-to-Text:** For voice transcription.
+
+## 3. Fully Operational Features
+
+- **User Authentication:** Secure user sign-up and login with email and password.
 - **CRM Integration:** Seamless connection with Wise Agent and Follow Up Boss.
 - **Property Search:** Advanced search capabilities for MLS listings.
 - **Natural Language Processing (NLP):** Voice and text commands for intuitive interaction.
 - **Data Management:** Secure storage and management of user data, CRM tokens, conversations, and more.
+- **Modern UI/UX:** A visually appealing and intuitive user interface with a consistent brand identity.
+- **Loading and Error States:** Clear and consistent loading indicators and error messages throughout the application.
 
-### Style & Design
-- **Colors:** 
-  - Primary: Asparagus Green (`#98BF64`)
-  - Secondary: Light Parchment (`#F5EBCD`)
-  - Accent: Marigold (`#FFB833`)
-- **UI:** Clean, modern, and mobile-first, optimized for touchscreens.
+## 4. Development Roadmap
 
-## 3. Implementation Plan
+The following is a roadmap for the future development of the Estait application.
 
-### Phase 1: Foundational Setup
-- **Objective:** Initialize the project, set up the core application structure, and implement user authentication.
-- **Steps:**
-    1. **Project Setup:** Create a new Next.js project with TypeScript, App Router, and Tailwind CSS.
-    2. **Firebase Integration:** Configure Firebase for authentication and Firestore.
-    3. **Authentication:** Implement email/password sign-up and login pages.
-    4. **Dashboard:** Create a protected dashboard page for logged-in users.
-    5. **Styling:** Define the global color palette and apply it to the UI.
+### Phase 1: Advanced CRM Features
+- [ ] **Contact Synchronization:** Implement a two-way synchronization of contacts between Estait and the connected CRMs.
+- [ ] **Task Management:** Allow users to create, view, and manage tasks in their CRMs directly from the Estait interface.
+- [ ] **Calendar Integration:** Integrate with Google Calendar to allow users to schedule appointments and view their calendar from within the application.
+- [ ] **Email Integration:** Integrate with Gmail to allow users to send and receive emails from within the application.
 
-### Phase 2: CRM Integration
-- **Objective:** Connect to Wise Agent and Follow Up Boss using OAuth 2.0.
-- **Steps:**
-    1. **UI:** Add "Connect CRM" buttons to the dashboard.
-    2. **OAuth Flow:** Implement the client-side and server-side logic for OAuth 2.0.
-    3. **Token Management:** Securely store and manage CRM tokens in Firestore.
-    4. **API Utilities:** Create utility functions for making secure API calls to the CRMs.
+### Phase 2: Enhanced Property Search
+- [ ] **Saved Searches:** Allow users to save their property search criteria for easy access later.
+- [ ] **Property Alerts:** Notify users when new properties that match their saved search criteria become available.
+- [ ] **MLS Integration:** Integrate with additional MLS providers to expand the property search capabilities.
 
-### Phase 3: Property Search & NLP
-- **Objective:** Integrate with the RealEstateAPI.com to enable property searches and implement an NLP layer for voice and text commands.
-- **Steps:**
-    1. **Property Search:** Create a new page for searching and displaying property listings.
-    2. **NLP:** Implement a cloud function to process natural language commands.
-    3. **Chat UI:** Create a chat interface for interacting with the NLP layer.
-
-### Phase 4: Final Touches
-- **Objective:** Refine the UI/UX, add monitoring and analytics, and prepare for deployment.
-- **Steps:**
-    1. **UI/UX:** Enhance the UI with loading states, error messages, and a polished design.
-    2. **Analytics:** Integrate Firebase Analytics, Crashlytics, and Performance Monitoring.
-    3. **Deployment:** Configure the project for deployment to Firebase Hosting.
-    4. **Documentation:** Add code comments and a `README.md` file.
-
-## 4. Technical Debt
-
-- **Hardcoded Values:** Replace any hardcoded API keys, client IDs, and other sensitive information with environment variables.
-- **Error Handling:** Implement more robust error handling and logging throughout the application.
-- **Testing:** Add unit and integration tests to ensure the stability and reliability of the application.
+### Phase 3: Polish and Performance
+- [ ] **UI/UX Refinements:** Continuously improve the user interface and user experience based on user feedback.
+- [ ] **Performance Optimization:** Optimize the performance of the application to ensure that it is fast and responsive.
+- [ ] **Testing:** Implement a comprehensive testing suite to ensure the quality and reliability of the application.
+- [ ] **Analytics:** Implement a more robust analytics solution to track user engagement and identify areas for improvement.
+- [ ] **Internationalization:** Add support for multiple languages to make the application accessible to a wider audience.

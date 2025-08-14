@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "your-firebase-project-id"
-  }
+    "default": "your-firebase-project-id",
+    "staging": "estait-1fdbe"
+  },
+  "targets": {},
+  "etags": {}
 }

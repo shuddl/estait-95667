@@ -1,0 +1,279 @@
+[debug] [2025-08-14T01:29:14.332Z] ----------------------------------------------------------------------
+[debug] [2025-08-14T01:29:14.335Z] Command:       /nix/store/ixbb20farqh1f4fqbmsn6b1ixn8mc8ij-nodejs-20.18.1/bin/node /home/user/.global_modules/bin/firebase init
+[debug] [2025-08-14T01:29:14.336Z] CLI Version:   14.12.0
+[debug] [2025-08-14T01:29:14.336Z] Platform:      linux
+[debug] [2025-08-14T01:29:14.336Z] Node Version:  v20.18.1
+[debug] [2025-08-14T01:29:14.337Z] Time:          Thu Aug 14 2025 01:29:14 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-08-14T01:29:14.337Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-14T01:29:14.924Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:29:14.925Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:29:14.933Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 [none]
+[debug] [2025-08-14T01:29:16.053Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 200
+[debug] [2025-08-14T01:29:16.054Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"workspaceId":"estait-95667-73596109","name":"estait-95667","workspaceRedirectUrl":"firebase-estait-95667-1755041795493.cluster-2ee5vomxonazmrcv3tg2ecztku.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-14T00:52:44.608233Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","owner":"SELF","serviceAccountEmail":"msp-3961885745045265082@monospace-per-ws-sa-5.iam.gserviceaccount.com","enableNix":true,"ownerEmail":"spencer@estait.io","workspaceImageUrl":"https://www.gstatic.com/monospace/231115/logo_nextjs.svg","templateArgs":"{\"language\":\"ts\",\"srcDir\":true,\"eslint\":true,\"app\":true,\"tailwind\":true,\"__agentic_workspace\":true}","templateRepoUrl":"file:///usr/local/monospace/templates/public/nextjs","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZXN0YWl0LTk1NjY3LTE3NTUwNDE3OTU0OTMuY2x1c3Rlci0yZWU1dm9teG9uYXptcmN2M3RnMmVjenRrdS5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NTUxMzQ5NTYsImV4cCI6MTc1NTIyMTM1NX0.uLcngJXsc01uxE1H4QWOLYcg4uN6TYf306i9ak__0W_ZufBMEKXFp-4P_xG4gEDqR6wGxWZ-IhbWi8OUTk1FXOFhDPGSjIrno9wPVRzhJ2vyhErR_gjczEK1tmxo4gAbTEc4SegZqjaMCeBt9c3-bSbtyl1-0Q7BEgs586eo1TyDnhnXg0VKjZJav8SBj_t6UP95E8evwbaMQPR-tecukWodq7yhUc2R3nXhZmIphpDrfjuhqHXSSgvJdJAlwt0LNorLUrjVlZ8hKRB9WQgtdHbof_KylSrIoViwtQd1ApBrc-C4S82MSD6dn67VjfoDRIJzKB7LQNQ5AApeulhCGQ"}
+[info] Updating Studio Workspace active project to match Firebase CLI 'staging'
+[debug] [2025-08-14T01:29:16.055Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:29:16.056Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:29:16.057Z] >>> [apiv2][query] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 updateMask=workspace.firebaseProjectId
+[debug] [2025-08-14T01:29:16.057Z] >>> [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"firebaseProjectId":"staging"}
+[debug] [2025-08-14T01:29:16.613Z] <<< [apiv2][status] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 200
+[debug] [2025-08-14T01:29:16.614Z] <<< [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"workspaceId":"estait-95667-73596109","name":"estait-95667","workspaceRedirectUrl":"firebase-estait-95667-1755041795493.cluster-2ee5vomxonazmrcv3tg2ecztku.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-14T00:52:44.608233Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","serviceAccountEmail":"msp-3961885745045265082@monospace-per-ws-sa-5.iam.gserviceaccount.com","enableNix":true,"workspaceImageUrl":"https://www.gstatic.com/monospace/231115/logo_nextjs.svg","templateArgs":"{\"language\":\"ts\",\"srcDir\":true,\"eslint\":true,\"app\":true,\"tailwind\":true,\"__agentic_workspace\":true}","templateRepoUrl":"file:///usr/local/monospace/templates/public/nextjs","firebaseProjectId":"staging"}
+[debug] [2025-08-14T01:29:16.626Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-08-14T01:29:16.627Z] > authorizing via signed-in user (spencer@estait.io)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/user/estait-95667
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-08-14T01:30:34.224Z] Using project from CLI flag: estait-1fdbe
+[debug] [2025-08-14T01:30:34.225Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.225Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.227Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe [none]
+[debug] [2025-08-14T01:30:34.531Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe 200
+[debug] [2025-08-14T01:30:34.531Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe {"projectId":"estait-1fdbe","projectNumber":"15352834778","displayName":"estait","name":"projects/estait-1fdbe","resources":{"hostingSite":"estait-1fdbe"},"state":"ACTIVE","etag":"1_c843f43f-8b05-4998-b5a8-fa6b53181813"}
+[info] i  Using project estait-1fdbe (estait) 
+[info] 
+=== Dataconnect Setup
+[debug] [2025-08-14T01:30:34.576Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.576Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.579Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/estait-1fdbe/billingInfo [none]
+[debug] [2025-08-14T01:30:34.888Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/estait-1fdbe/billingInfo 200
+[debug] [2025-08-14T01:30:34.890Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/estait-1fdbe/billingInfo {"name":"projects/estait-1fdbe/billingInfo","projectId":"estait-1fdbe","billingAccountName":"billingAccounts/01E62E-580BE9-DB36A0","billingEnabled":true}
+[info] i  dataconnect: ensuring required API firebasedataconnect.googleapis.com is enabled... 
+[debug] [2025-08-14T01:30:34.904Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.904Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:34.905Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-08-14T01:30:34.905Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:35.266Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-08-14T01:30:35.266Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com [omitted]
+[warn] ⚠  dataconnect: missing required API firebasedataconnect.googleapis.com. Enabling now... 
+[debug] [2025-08-14T01:30:35.269Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:35.273Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:35.273Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com:enable [none]
+[debug] [2025-08-14T01:30:35.273Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com:enable x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:35.734Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com:enable 200
+[debug] [2025-08-14T01:30:35.734Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firebasedataconnect.googleapis.com:enable [omitted]
+[info] i  dataconnect: ensuring required API sqladmin.googleapis.com is enabled... 
+[debug] [2025-08-14T01:30:45.753Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:45.754Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:45.754Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com [none]
+[debug] [2025-08-14T01:30:45.754Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:46.237Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com 200
+[debug] [2025-08-14T01:30:46.238Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com [omitted]
+[warn] ⚠  dataconnect: missing required API sqladmin.googleapis.com. Enabling now... 
+[debug] [2025-08-14T01:30:46.239Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:46.239Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:46.239Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com:enable [none]
+[debug] [2025-08-14T01:30:46.239Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com:enable x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:46.641Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com:enable 200
+[debug] [2025-08-14T01:30:46.642Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/sqladmin.googleapis.com:enable [omitted]
+[info] i  dataconnect: ensuring required API compute.googleapis.com is enabled... 
+[debug] [2025-08-14T01:30:56.659Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:56.659Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:56.660Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com [none]
+[debug] [2025-08-14T01:30:56.660Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:57.412Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com 200
+[debug] [2025-08-14T01:30:57.412Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com [omitted]
+[warn] ⚠  dataconnect: missing required API compute.googleapis.com. Enabling now... 
+[debug] [2025-08-14T01:30:57.414Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:57.414Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:30:57.415Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com:enable [none]
+[debug] [2025-08-14T01:30:57.415Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com:enable x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:30:58.137Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com:enable 200
+[debug] [2025-08-14T01:30:58.138Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/compute.googleapis.com:enable [omitted]
+[debug] [2025-08-14T01:31:08.156Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:31:08.156Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:31:08.157Z] >>> [apiv2][query] GET https://firebasedataconnect.googleapis.com/v1/projects/estait-1fdbe/locations/-/services [none]
+[debug] [2025-08-14T01:31:08.751Z] <<< [apiv2][status] GET https://firebasedataconnect.googleapis.com/v1/projects/estait-1fdbe/locations/-/services 200
+[debug] [2025-08-14T01:31:08.752Z] <<< [apiv2][body] GET https://firebasedataconnect.googleapis.com/v1/projects/estait-1fdbe/locations/-/services {}
+[debug] [2025-08-14T01:32:57.916Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (/home/user/.global_modules/lib/node_modules/firebase-tools/node_modules/@inquirer/core/dist/commonjs/lib/create-prompt.js:101:37)
+    at Interface.emit (node:events:518:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1125:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:264:20)
+    at ReadStream.emit (node:events:530:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-14T01:33:05.142Z] ----------------------------------------------------------------------
+[debug] [2025-08-14T01:33:05.145Z] Command:       /nix/store/ixbb20farqh1f4fqbmsn6b1ixn8mc8ij-nodejs-20.18.1/bin/node /home/user/.global_modules/bin/firebase init
+[debug] [2025-08-14T01:33:05.146Z] CLI Version:   14.12.0
+[debug] [2025-08-14T01:33:05.146Z] Platform:      linux
+[debug] [2025-08-14T01:33:05.147Z] Node Version:  v20.18.1
+[debug] [2025-08-14T01:33:05.147Z] Time:          Thu Aug 14 2025 01:33:05 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-08-14T01:33:05.147Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-14T01:33:05.692Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:33:05.693Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:33:05.698Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 [none]
+[debug] [2025-08-14T01:33:06.500Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 200
+[debug] [2025-08-14T01:33:06.500Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"workspaceId":"estait-95667-73596109","name":"estait-95667","workspaceRedirectUrl":"firebase-estait-95667-1755041795493.cluster-2ee5vomxonazmrcv3tg2ecztku.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-14T01:29:16.563502Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","owner":"SELF","serviceAccountEmail":"msp-3961885745045265082@monospace-per-ws-sa-5.iam.gserviceaccount.com","enableNix":true,"ownerEmail":"spencer@estait.io","workspaceImageUrl":"https://www.gstatic.com/monospace/231115/logo_nextjs.svg","templateArgs":"{\"language\":\"ts\",\"srcDir\":true,\"eslint\":true,\"app\":true,\"tailwind\":true,\"__agentic_workspace\":true}","templateRepoUrl":"file:///usr/local/monospace/templates/public/nextjs","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZXN0YWl0LTk1NjY3LTE3NTUwNDE3OTU0OTMuY2x1c3Rlci0yZWU1dm9teG9uYXptcmN2M3RnMmVjenRrdS5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NTUxMzUxODYsImV4cCI6MTc1NTIyMTU4Nn0.Z1gbwN0ug-1fGrNUfi_w_u6GU6GVbeq-y4LJawNsC2LNBfApklt0DXhlaTR8KKoa0vlb35_ZgGyF77toEyE7u7JEiQ12wW4QSQkLZDkGNKCgFNfUiav7xLn-dgh56dbq56eAAJwrIRsjnT8-qf6LtmvE5zR0_xGpEQN76Y63_krKzVoMzVSk2xSc2QHUsUsKu5DbxQv7rokTI_a3IYO5_Qo9mPu_QkHj7Z-9UaoRwbr6TkXAepOMfl_UlmbGn9P_3WWuGxMOzLDOwwIphX_o2-8ijBXr7IAbRZTmjlD9b66fWadHx0jgUvF9RGygGK59_9IGIwkIbeckTdlXPrHMyA","firebaseProjectId":"staging"}
+[info] Updating Studio Workspace active project to match Firebase CLI 'estait-1fdbe'
+[debug] [2025-08-14T01:34:23.524Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:34:23.525Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:34:23.543Z] >>> [apiv2][query] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 updateMask=workspace.firebaseProjectId
+[debug] [2025-08-14T01:34:23.543Z] >>> [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"firebaseProjectId":"estait-1fdbe"}
+[debug] [2025-08-14T01:34:24.110Z] <<< [apiv2][status] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 200
+[debug] [2025-08-14T01:34:24.110Z] <<< [apiv2][body] PATCH https://monospace-pa.googleapis.com/v1/workspaces/estait-95667-73596109 {"workspaceId":"estait-95667-73596109","name":"estait-95667","workspaceRedirectUrl":"firebase-estait-95667-1755041795493.cluster-2ee5vomxonazmrcv3tg2ecztku.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-08-14T01:29:16.563502Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","serviceAccountEmail":"msp-3961885745045265082@monospace-per-ws-sa-5.iam.gserviceaccount.com","enableNix":true,"workspaceImageUrl":"https://www.gstatic.com/monospace/231115/logo_nextjs.svg","templateArgs":"{\"language\":\"ts\",\"srcDir\":true,\"eslint\":true,\"app\":true,\"tailwind\":true,\"__agentic_workspace\":true}","templateRepoUrl":"file:///usr/local/monospace/templates/public/nextjs","firebaseProjectId":"estait-1fdbe"}
+[debug] [2025-08-14T01:34:24.129Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-08-14T01:34:24.130Z] > authorizing via signed-in user (spencer@estait.io)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/user/estait-95667
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-08-14T01:39:15.857Z] Using project from CLI flag: estait-1fdbe
+[debug] [2025-08-14T01:39:15.857Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:15.857Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:15.862Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe [none]
+[debug] [2025-08-14T01:39:16.206Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe 200
+[debug] [2025-08-14T01:39:16.206Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/estait-1fdbe {"projectId":"estait-1fdbe","projectNumber":"15352834778","displayName":"estait","name":"projects/estait-1fdbe","resources":{"hostingSite":"estait-1fdbe"},"state":"ACTIVE","etag":"1_c843f43f-8b05-4998-b5a8-fa6b53181813"}
+[info] i  Using project estait-1fdbe (estait) 
+[info] 
+=== Firestore Setup
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2025-08-14T01:39:16.252Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:16.253Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:16.255Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com [none]
+[debug] [2025-08-14T01:39:16.255Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:39:16.657Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com 200
+[debug] [2025-08-14T01:39:16.657Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com [omitted]
+[warn] ⚠  firestore: missing required API firestore.googleapis.com. Enabling now... 
+[debug] [2025-08-14T01:39:16.659Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:16.659Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:16.660Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com:enable [none]
+[debug] [2025-08-14T01:39:16.660Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com:enable x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:39:16.930Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com:enable 200
+[debug] [2025-08-14T01:39:16.931Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/firestore.googleapis.com:enable [omitted]
+[debug] [2025-08-14T01:39:26.949Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:26.950Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:26.950Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases [none]
+[debug] [2025-08-14T01:39:27.328Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases 200
+[debug] [2025-08-14T01:39:27.328Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases {}
+[debug] [2025-08-14T01:39:27.330Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:27.330Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:39:27.330Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/locations [none]
+[debug] [2025-08-14T01:39:27.431Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/locations 200
+[debug] [2025-08-14T01:39:27.431Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/locations {"locations":[{"name":"projects/estait-1fdbe/locations/eur3","labels":{"appengine.googleapis.com/geo":"europe-west","cloud.googleapis.com/location":"eur3","cloud.googleapis.com/geo":"eur3"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"eur3","displayName":"Europe"},{"name":"projects/estait-1fdbe/locations/nam5","labels":{"appengine.googleapis.com/geo":"us-central","cloud.googleapis.com/location":"nam5","cloud.googleapis.com/geo":"nam5"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"nam5","displayName":"United States"},{"name":"projects/estait-1fdbe/locations/nam7","labels":{"cloud.googleapis.com/location":"nam7","cloud.googleapis.com/geo":"nam7"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"nam7","displayName":"United States"},{"name":"projects/estait-1fdbe/locations/africa-south1","labels":{"cloud.googleapis.com/location":"africa-south1","cloud.googleapis.com/region":"africa-south1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"africa-south1","displayName":"Johannesburg"},{"name":"projects/estait-1fdbe/locations/asia-east1","labels":{"appengine.googleapis.com/region":"asia-east1","cloud.googleapis.com/location":"asia-east1","cloud.googleapis.com/region":"asia-east1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-east1","displayName":"Taiwan"},{"name":"projects/estait-1fdbe/locations/asia-east2","labels":{"appengine.googleapis.com/region":"asia-east2","cloud.googleapis.com/location":"asia-east2","cloud.googleapis.com/region":"asia-east2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-east2","displayName":"Hong Kong"},{"name":"projects/estait-1fdbe/locations/asia-northeast1","labels":{"appengine.googleapis.com/region":"asia-northeast1","cloud.googleapis.com/location":"asia-northeast1","cloud.googleapis.com/region":"asia-northeast1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-northeast1","displayName":"Tokyo"},{"name":"projects/estait-1fdbe/locations/asia-northeast2","labels":{"appengine.googleapis.com/region":"asia-northeast2","cloud.googleapis.com/location":"asia-northeast2","cloud.googleapis.com/region":"asia-northeast2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-northeast2","displayName":"Osaka"},{"name":"projects/estait-1fdbe/locations/asia-northeast3","labels":{"appengine.googleapis.com/region":"asia-northeast3","cloud.googleapis.com/location":"asia-northeast3","cloud.googleapis.com/region":"asia-northeast3"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-northeast3","displayName":"Seoul"},{"name":"projects/estait-1fdbe/locations/asia-south1","labels":{"appengine.googleapis.com/region":"asia-south1","cloud.googleapis.com/location":"asia-south1","cloud.googleapis.com/region":"asia-south1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-south1","displayName":"Mumbai"},{"name":"projects/estait-1fdbe/locations/asia-south2","labels":{"cloud.googleapis.com/location":"asia-south2","cloud.googleapis.com/region":"asia-south2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-south2","displayName":"Delhi"},{"name":"projects/estait-1fdbe/locations/asia-southeast1","labels":{"appengine.googleapis.com/region":"asia-southeast1","cloud.googleapis.com/location":"asia-southeast1","cloud.googleapis.com/region":"asia-southeast1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-southeast1","displayName":"Singapore"},{"name":"projects/estait-1fdbe/locations/asia-southeast2","labels":{"appengine.googleapis.com/region":"asia-southeast2","cloud.googleapis.com/location":"asia-southeast2","cloud.googleapis.com/region":"asia-southeast2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"asia-southeast2","displayName":"Jakarta"},{"name":"projects/estait-1fdbe/locations/australia-southeast1","labels":{"appengine.googleapis.com/region":"australia-southeast1","cloud.googleapis.com/location":"australia-southeast1","cloud.googleapis.com/region":"australia-southeast1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"australia-southeast1","displayName":"Sydney"},{"name":"projects/estait-1fdbe/locations/australia-southeast2","labels":{"cloud.googleapis.com/location":"australia-southeast2","cloud.googleapis.com/region":"australia-southeast2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"australia-southeast2","displayName":"Melbourne"},{"name":"projects/estait-1fdbe/locations/europe-central2","labels":{"appengine.googleapis.com/region":"europe-central2","cloud.googleapis.com/location":"europe-central2","cloud.googleapis.com/region":"europe-central2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-central2","displayName":"Warsaw"},{"name":"projects/estait-1fdbe/locations/europe-north1","labels":{"cloud.googleapis.com/location":"europe-north1","cloud.googleapis.com/region":"europe-north1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-north1","displayName":"Finland"},{"name":"projects/estait-1fdbe/locations/europe-north2","labels":{"cloud.googleapis.com/location":"europe-north2","cloud.googleapis.com/region":"europe-north2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-north2","displayName":"Stockholm"},{"name":"projects/estait-1fdbe/locations/europe-southwest1","labels":{"cloud.googleapis.com/location":"europe-southwest1","cloud.googleapis.com/region":"europe-southwest1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-southwest1","displayName":"Madrid"},{"name":"projects/estait-1fdbe/locations/europe-west1","labels":{"cloud.googleapis.com/location":"europe-west1","cloud.googleapis.com/region":"europe-west1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west1","displayName":"Belgium"},{"name":"projects/estait-1fdbe/locations/europe-west10","labels":{"cloud.googleapis.com/location":"europe-west10","cloud.googleapis.com/region":"europe-west10"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west10","displayName":"Berlin"},{"name":"projects/estait-1fdbe/locations/europe-west12","labels":{"cloud.googleapis.com/location":"europe-west12","cloud.googleapis.com/region":"europe-west12"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west12","displayName":"Turin"},{"name":"projects/estait-1fdbe/locations/europe-west2","labels":{"appengine.googleapis.com/region":"europe-west2","cloud.googleapis.com/location":"europe-west2","cloud.googleapis.com/region":"europe-west2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west2","displayName":"London"},{"name":"projects/estait-1fdbe/locations/europe-west3","labels":{"appengine.googleapis.com/region":"europe-west3","cloud.googleapis.com/location":"europe-west3","cloud.googleapis.com/region":"europe-west3"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west3","displayName":"Frankfurt"},{"name":"projects/estait-1fdbe/locations/europe-west4","labels":{"cloud.googleapis.com/location":"europe-west4","cloud.googleapis.com/region":"europe-west4"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west4","displayName":"Netherlands"},{"name":"projects/estait-1fdbe/locations/europe-west6","labels":{"appengine.googleapis.com/region":"europe-west6","cloud.googleapis.com/location":"europe-west6","cloud.googleapis.com/region":"europe-west6"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west6","displayName":"Zurich"},{"name":"projects/estait-1fdbe/locations/europe-west8","labels":{"cloud.googleapis.com/location":"europe-west8","cloud.googleapis.com/region":"europe-west8"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west8","displayName":"Milan"},{"name":"projects/estait-1fdbe/locations/europe-west9","labels":{"cloud.googleapis.com/location":"europe-west9","cloud.googleapis.com/region":"europe-west9"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"europe-west9","displayName":"Paris"},{"name":"projects/estait-1fdbe/locations/me-central1","labels":{"cloud.googleapis.com/location":"me-central1","cloud.googleapis.com/region":"me-central1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"me-central1","displayName":"Doha"},{"name":"projects/estait-1fdbe/locations/me-central2","labels":{"cloud.googleapis.com/location":"me-central2","cloud.googleapis.com/region":"me-central2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"me-central2","displayName":"Dammam"},{"name":"projects/estait-1fdbe/locations/me-west1","labels":{"cloud.googleapis.com/location":"me-west1","cloud.googleapis.com/region":"me-west1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"me-west1","displayName":"Tel Aviv"},{"name":"projects/estait-1fdbe/locations/northamerica-northeast1","labels":{"appengine.googleapis.com/region":"northamerica-northeast1","cloud.googleapis.com/location":"northamerica-northeast1","cloud.googleapis.com/region":"northamerica-northeast1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"northamerica-northeast1","displayName":"Montréal"},{"name":"projects/estait-1fdbe/locations/northamerica-northeast2","labels":{"cloud.googleapis.com/location":"northamerica-northeast2","cloud.googleapis.com/region":"northamerica-northeast2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"northamerica-northeast2","displayName":"Toronto"},{"name":"projects/estait-1fdbe/locations/northamerica-south1","labels":{"cloud.googleapis.com/location":"northamerica-south1","cloud.googleapis.com/region":"northamerica-south1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"northamerica-south1","displayName":"Mexico"},{"name":"projects/estait-1fdbe/locations/southamerica-east1","labels":{"appengine.googleapis.com/region":"southamerica-east1","cloud.googleapis.com/location":"southamerica-east1","cloud.googleapis.com/region":"southamerica-east1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"southamerica-east1","displayName":"São Paulo"},{"name":"projects/estait-1fdbe/locations/southamerica-west1","labels":{"cloud.googleapis.com/location":"southamerica-west1","cloud.googleapis.com/region":"southamerica-west1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"southamerica-west1","displayName":"Santiago"},{"name":"projects/estait-1fdbe/locations/us-central1","labels":{"cloud.googleapis.com/location":"us-central1","cloud.googleapis.com/region":"us-central1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-central1","displayName":"Iowa"},{"name":"projects/estait-1fdbe/locations/us-east1","labels":{"appengine.googleapis.com/region":"us-east1","cloud.googleapis.com/location":"us-east1","cloud.googleapis.com/region":"us-east1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-east1","displayName":"South Carolina"},{"name":"projects/estait-1fdbe/locations/us-east4","labels":{"appengine.googleapis.com/region":"us-east4","cloud.googleapis.com/location":"us-east4","cloud.googleapis.com/region":"us-east4"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-east4","displayName":"Northern Virginia"},{"name":"projects/estait-1fdbe/locations/us-east5","labels":{"cloud.googleapis.com/location":"us-east5","cloud.googleapis.com/region":"us-east5"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-east5","displayName":"Columbus"},{"name":"projects/estait-1fdbe/locations/us-south1","labels":{"cloud.googleapis.com/location":"us-south1","cloud.googleapis.com/region":"us-south1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-south1","displayName":"Dallas"},{"name":"projects/estait-1fdbe/locations/us-west1","labels":{"appengine.googleapis.com/region":"us-west1","cloud.googleapis.com/location":"us-west1","cloud.googleapis.com/region":"us-west1"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-west1","displayName":"Oregon"},{"name":"projects/estait-1fdbe/locations/us-west2","labels":{"appengine.googleapis.com/region":"us-west2","cloud.googleapis.com/location":"us-west2","cloud.googleapis.com/region":"us-west2"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-west2","displayName":"Los Angeles"},{"name":"projects/estait-1fdbe/locations/us-west3","labels":{"appengine.googleapis.com/region":"us-west3","cloud.googleapis.com/location":"us-west3","cloud.googleapis.com/region":"us-west3"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-west3","displayName":"Salt Lake City"},{"name":"projects/estait-1fdbe/locations/us-west4","labels":{"appengine.googleapis.com/region":"us-west4","cloud.googleapis.com/location":"us-west4","cloud.googleapis.com/region":"us-west4"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-west4","displayName":"Las Vegas"},{"name":"projects/estait-1fdbe/locations/us-west8","labels":{"cloud.googleapis.com/location":"us-west8","cloud.googleapis.com/region":"us-west8"},"metadata":{"@type":"type.googleapis.com/google.firestore.admin.v1.LocationMetadata"},"locationId":"us-west8","displayName":"Phoenix"}]}
+[info] 
+[info] Firestore Security Rules allow you to define how and when to allow
+[info] requests. You can keep these rules in your project directory
+[info] and publish them with firebase deploy.
+[info] 
+[debug] [2025-08-14T01:44:34.551Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:44:34.552Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:44:34.553Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/estait-1fdbe/releases pageSize=10&pageToken=
+[debug] [2025-08-14T01:44:34.663Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/estait-1fdbe/releases 200
+[debug] [2025-08-14T01:44:34.663Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/estait-1fdbe/releases {}
+[info] 
+[info] Firestore indexes allow you to perform complex queries while
+[info] maintaining performance that scales with the size of the result
+[info] set. You can keep index definitions in your project directory
+[info] and publish them with firebase deploy.
+[info] 
+[debug] [2025-08-14T01:46:13.152Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.153Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.153Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.154Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.154Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/indexes [none]
+[debug] [2025-08-14T01:46:13.162Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* [none]
+[debug] [2025-08-14T01:46:13.268Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* 404
+[debug] [2025-08-14T01:46:13.268Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* {"error":{"code":404,"message":"Project 'estait-1fdbe' or database '(default)' does not exist.","status":"NOT_FOUND"}}
+[info] ✔  Wrote firestore.rules 
+[info] ✔  Wrote firestore.indexes.json 
+[debug] [2025-08-14T01:46:13.319Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/indexes 404
+[debug] [2025-08-14T01:46:13.320Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/estait-1fdbe/databases/(default)/collectionGroups/-/indexes {"error":{"code":404,"message":"Project 'estait-1fdbe' or database '(default)' does not exist.","status":"NOT_FOUND"}}
+[info] 
+=== Functions Setup
+[debug] [2025-08-14T01:46:13.329Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-08-14T01:46:13.329Z] > authorizing via signed-in user (spencer@estait.io)
+[debug] [2025-08-14T01:46:13.329Z] [iam] checking project estait-1fdbe for permissions ["firebase.projects.get"]
+[debug] [2025-08-14T01:46:13.341Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.341Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.342Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/estait-1fdbe:testIamPermissions [none]
+[debug] [2025-08-14T01:46:13.343Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/estait-1fdbe:testIamPermissions x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:46:13.343Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/estait-1fdbe:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-08-14T01:46:13.425Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/estait-1fdbe:testIamPermissions 200
+[debug] [2025-08-14T01:46:13.425Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/estait-1fdbe:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-08-14T01:46:13.429Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.429Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.430Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.430Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.430Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-08-14T01:46:13.430Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:46:13.438Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-08-14T01:46:13.438Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:46:13.791Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/runtimeconfig.googleapis.com 200
+[debug] [2025-08-14T01:46:13.792Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-08-14T01:46:13.837Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com 200
+[debug] [2025-08-14T01:46:13.838Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-08-14T01:46:13.838Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.838Z] Checked if tokens are valid: true, expires at: 1755138413176
+[debug] [2025-08-14T01:46:13.839Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com:enable [none]
+[debug] [2025-08-14T01:46:13.839Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com:enable x-goog-quota-user=projects/estait-1fdbe
+[debug] [2025-08-14T01:46:14.326Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com:enable 200
+[debug] [2025-08-14T01:46:14.326Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/estait-1fdbe/services/cloudfunctions.googleapis.com:enable [omitted]
+[info] 
+Detected existing codebase(s): default
+
+[info] Let's create a new codebase for your functions.
+[info] A directory corresponding to the codebase will be created in your project
+[info] with sample code pre-configured.
+
+[info] See https://firebase.google.com/docs/functions/organize-functions for
+[info] more information on organizing your functions using codebases.
+
+[info] Functions can be deployed with firebase deploy.
+
+[error] functions.source must be unique but 'functions' was used more than once.
+[debug] [2025-08-14T01:50:00.496Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (/home/user/.global_modules/lib/node_modules/firebase-tools/node_modules/@inquirer/core/dist/commonjs/lib/create-prompt.js:101:37)
+    at Interface.emit (node:events:518:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1125:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:264:20)
+    at ReadStream.emit (node:events:530:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.

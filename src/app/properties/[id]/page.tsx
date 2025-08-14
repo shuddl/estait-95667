@@ -1,6 +1,8 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import Image from 'next/image';
 
 const functions = getFunctions();
 
@@ -55,10 +57,14 @@ const PropertyDetails = ({ params }) => {
   return (
     <div className="container mx-auto p-4">
       <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="bg-gray-200 h-96 rounded-md mb-4">
-          {property.photos && property.photos.length > 0 && (
-            <img src={property.photos[0].href} alt={property.address.streetAddress} className="w-full h-full object-cover rounded-md" />
-          )}
+        <div className="relative h-96 bg-gray-200 rounded-md mb-4">
+          <Image
+            src={property.photos && property.photos.length > 0 ? property.photos[0].href : '/placeholder.jpg'}
+            alt={property.address.streetAddress}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-md"
+          />
         </div>
         <h1 className="text-3xl font-bold mb-2">{property.address.streetAddress}</h1>
         <p className="text-gray-700 mb-2">${property.price.toLocaleString()}</p>
