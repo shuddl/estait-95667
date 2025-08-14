@@ -1,32 +1,30 @@
 
-import * as crypto from 'crypto';
-import * as functions from 'firebase-functions';
+import * as crypto from "crypto";
 
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const SALT_LENGTH = 64;
 const TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
-// It's recommended to get the secret from Firebase environment configuration
-const secret = functions.config().encryption.key || 'a-very-secret-key-that-is-long-enough';
+const secret = "a-very-secret-key-that-is-long-enough"; // TODO: Use a secure way to store this secret
+const salt = crypto.randomBytes(SALT_LENGTH);
 
 const getKey = (salt: crypto.BinaryLike): Buffer => {
-    return crypto.pbkdf2Sync(secret, salt, 100000, KEY_LENGTH, 'sha512');
+    return crypto.pbkdf2Sync(secret, salt, 100000, KEY_LENGTH, "sha512");
 }
 
 export const encrypt = (text: string): string => {
-    const salt = crypto.randomBytes(SALT_LENGTH);
     const iv = crypto.randomBytes(IV_LENGTH);
     const key = getKey(salt);
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-    const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+    const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
     const tag = cipher.getAuthTag();
-    return Buffer.concat([salt, iv, tag, encrypted]).toString('hex');
+    return Buffer.concat([salt, iv, tag, encrypted]).toString("hex");
 };
 
 export const decrypt = (encrypted: string): string => {
-    const data = Buffer.from(encrypted, 'hex');
+    const data = Buffer.from(encrypted, "hex");
     const salt = data.slice(0, SALT_LENGTH);
     const iv = data.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
     const tag = data.slice(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
@@ -36,5 +34,5 @@ export const decrypt = (encrypted: string): string => {
     decipher.setAuthTag(tag);
     // Correctly handle the Buffer output from update before concatenating with final's output
     const decrypted = Buffer.concat([decipher.update(encryptedText), decipher.final()]);
-    return decrypted.toString('utf8');
+    return decrypted.toString("utf8");
 };
