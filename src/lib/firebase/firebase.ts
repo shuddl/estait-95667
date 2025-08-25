@@ -2,6 +2,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getPerformance } from 'firebase/performance';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
@@ -27,6 +28,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
 let analytics: Analytics | null = null; // Explicitly type analytics
 let perf;
 let appCheck;
@@ -42,4 +44,4 @@ if (typeof window !== 'undefined') {
     });
 }
 
-export { app, auth, db, analytics, perf, appCheck };
+export { app, auth, db, functions, analytics, perf, appCheck };

@@ -1,107 +1,148 @@
-
 'use client';
-import React, { useState, FormEvent, ChangeEvent } from 'react';
-import { logIn } from '../../lib/firebase/auth';
+import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Logo from '../components/Logo';
-import type { LoginFormData } from '@/types';
+import AnimatedLogo from '../components/AnimatedLogo';
 
-const Login: React.FC = () => {
-  // Typed state variables
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Handle input changes with proper typing
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Handle form submission with proper error handling
-  const handleLogin = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError('');
     setLoading(true);
-    
+
     try {
-      await logIn(formData.email, formData.password);
-      router.push('/dashboard');
-    } catch (error) {
-      // Type-safe error handling
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Invalid email or password. Please try again.');
-      }
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/');
+    } catch (err) {
+      setError((err as Error).message || 'Failed to sign in');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black">
-      <div className="flex-grow flex items-center justify-center">
-        <div className="w-full max-w-md p-10 space-y-8 bg-black rounded-2xl m-4 border border-gray-100/10">
-          <div className="flex justify-center">
-            <Logo />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div className="w-full" style={{ maxWidth: '400px', padding: '0 16px' }}>
+        <div className="card animate-fadeIn">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <AnimatedLogo size="lg" />
           </div>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
+
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="mb-2">Welcome back</h1>
+            <p className="caption">Sign in to continue to Estait</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="email" className="label">
+                Email address
+              </label>
               <input
+                id="email"
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                placeholder="Enter your email"
                 required
-                className="w-full px-4 py-3 mt-1 border border-gray-100/10 rounded-lg shadow-sm focus:ring-white/50 focus:border-white/50 transition bg-white/5 text-white placeholder-white/50"
-                placeholder="you@example.com"
-                autoComplete="email"
               />
             </div>
-            <div>
+
+            <div className="mb-4">
+              <label htmlFor="password" className="label">
+                Password
+              </label>
               <input
+                id="password"
                 type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 mt-1 border border-gray-100/10 rounded-lg shadow-sm focus:ring-white/50 focus:border-white/50 transition bg-white/5 text-white placeholder-white/50"
-                placeholder="••••••••"
-                autoComplete="current-password"
               />
             </div>
-            {error && <p className="text-center text-red-400 text-sm">{error}</p>}
-            <div>
-              <button
-                type="submit"
-                className="w-full px-4 py-3 text-white bg-black rounded-full hover:bg-white/5 font-bold transition text-lg transform hover:scale-105 border border-gray-100/10"
-                disabled={loading}
-              >
-                {loading ? 'Logging in...' : 'Log in'}
-              </button>
+
+            {error && (
+              <div className="mb-4" style={{
+                padding: '12px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(255, 82, 119, 0.1)',
+                color: 'var(--error)',
+                border: '1px solid rgba(255, 82, 119, 0.2)',
+                fontSize: '14px'
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full mb-3"
+            >
+              {loading ? (
+                <div className="loading-indicator" style={{ width: '24px', margin: '0 auto' }} />
+              ) : (
+                'Sign in'
+              )}
+            </button>
+
+            <div className="text-center mb-4">
+              <Link href="#" className="caption" style={{ color: 'var(--text-secondary)' }}>
+                Forgot your password?
+              </Link>
             </div>
           </form>
-          <div className="text-center text-sm text-white/50">
-            <p>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1" style={{ height: '1px', background: 'var(--border)' }} />
+            <span className="caption">or</span>
+            <div className="flex-1" style={{ height: '1px', background: 'var(--border)' }} />
+          </div>
+
+          {/* Alternative actions */}
+          <button className="btn btn-secondary w-full mb-4">
+            Continue with Google
+          </button>
+          
+          <div className="text-center">
+            <p className="caption">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-bold text-white hover:underline">
-                  Sign up
+              <Link href="/signup" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                Sign up
               </Link>
             </p>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="caption">
+            By continuing, you agree to our{' '}
+            <Link href="#" style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
+              Terms of Service
+            </Link>
+            {' '}and{' '}
+            <Link href="#" style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}
