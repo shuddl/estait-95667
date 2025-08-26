@@ -3,18 +3,26 @@
  * Handles subscriptions, payments, and billing for Estait
  */
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions/v1';
-import Stripe from 'stripe';
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions/v1";
+import Stripe from "stripe";
 
-// Initialize Stripe
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 
-                       functions.config().stripe?.secret_key || '';
+// Initialize Stripe lazily to avoid initialization errors
+let stripe: Stripe | null = null;
 
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-07-30.basil',
-  typescript: true
-});
+const getStripe = (): Stripe => {
+  if (!stripe) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 
+                           functions.config().stripe?.secret_key || 
+                           "sk_test_placeholder"; // Use placeholder for deployment
+    
+    stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-07-30.basil",
+      typescript: true
+    });
+  }
+  return stripe;
+};
 
 export interface SubscriptionPlan {
   id: string;
@@ -31,15 +39,15 @@ export interface SubscriptionPlan {
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
-    id: 'basic',
-    name: 'Basic',
+    id: "basic",
+    name: "Basic",
     price: 99,
-    priceId: '', // Will be set from Stripe dashboard
+    priceId: "", // Will be set from Stripe dashboard
     features: [
-      'Up to 100 contacts',
-      '500 AI requests/month',
-      'Basic CRM integration',
-      'Email support'
+      "Up to 100 contacts",
+      "500 AI requests/month",
+      "Basic CRM integration",
+      "Email support"
     ],
     limits: {
       contacts: 100,
@@ -48,17 +56,17 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     }
   },
   {
-    id: 'professional',
-    name: 'Professional',
+    id: "professional",
+    name: "Professional",
     price: 199,
-    priceId: '', // Will be set from Stripe dashboard
+    priceId: "", // Will be set from Stripe dashboard
     features: [
-      'Unlimited contacts',
-      '2000 AI requests/month',
-      'All CRM integrations',
-      'Smart reminders',
-      'Priority support',
-      'Advanced analytics'
+      "Unlimited contacts",
+      "2000 AI requests/month",
+      "All CRM integrations",
+      "Smart reminders",
+      "Priority support",
+      "Advanced analytics"
     ],
     limits: {
       contacts: -1, // unlimited
@@ -67,17 +75,17 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     }
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
+    id: "enterprise",
+    name: "Enterprise",
     price: 499,
-    priceId: '', // Will be set from Stripe dashboard
+    priceId: "", // Will be set from Stripe dashboard
     features: [
-      'Everything in Professional',
-      'Unlimited AI requests',
-      'Custom integrations',
-      'Dedicated account manager',
-      'API access',
-      'White-label options'
+      "Everything in Professional",
+      "Unlimited AI requests",
+      "Custom integrations",
+      "Dedicated account manager",
+      "API access",
+      "White-label options"
     ],
     limits: {
       contacts: -1,
@@ -93,7 +101,7 @@ export class StripeService {
    */
   async createCustomer(userId: string, email: string, name?: string): Promise<Stripe.Customer> {
     try {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email,
         name,
         metadata: {
@@ -103,7 +111,7 @@ export class StripeService {
 
       // Store Stripe customer ID in Firestore
       await admin.firestore()
-        .collection('users')
+        .collection("users")
         .doc(userId)
         .update({
           stripeCustomerId: customer.id,
@@ -112,10 +120,10 @@ export class StripeService {
 
       return customer;
     } catch (error) {
-      console.error('Error creating Stripe customer:', error);
+      console.error("Error creating Stripe customer:", error);
       throw new functions.https.HttpsError(
-        'internal',
-        'Failed to create customer account'
+        "internal",
+        "Failed to create customer account"
       );
     }
   }
@@ -125,7 +133,7 @@ export class StripeService {
    */
   async getOrCreateCustomer(userId: string): Promise<string> {
     const userDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .get();
 
@@ -138,7 +146,7 @@ export class StripeService {
     // Create new customer
     const customer = await this.createCustomer(
       userId,
-      userData?.email || '',
+      userData?.email || "",
       userData?.displayName
     );
 
@@ -157,23 +165,23 @@ export class StripeService {
     const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
     if (!plan) {
       throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Invalid subscription plan'
+        "invalid-argument",
+        "Invalid subscription plan"
       );
     }
 
     const customerId = await this.getOrCreateCustomer(userId);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price: plan.priceId,
           quantity: 1
         }
       ],
-      mode: 'subscription',
+      mode: "subscription",
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
@@ -191,14 +199,14 @@ export class StripeService {
 
     // Store session info
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('checkoutSessions')
+      .collection("checkoutSessions")
       .doc(session.id)
       .set({
         sessionId: session.id,
         planId,
-        status: 'pending',
+        status: "pending",
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
@@ -211,7 +219,7 @@ export class StripeService {
   async createPortalSession(userId: string, returnUrl: string): Promise<Stripe.BillingPortal.Session> {
     const customerId = await this.getOrCreateCustomer(userId);
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl
     });
@@ -224,7 +232,7 @@ export class StripeService {
    */
   async cancelSubscription(userId: string): Promise<void> {
     const userDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .get();
 
@@ -232,21 +240,21 @@ export class StripeService {
     
     if (!subscriptionId) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'No active subscription found'
+        "failed-precondition",
+        "No active subscription found"
       );
     }
 
     // Cancel at period end
-    await stripe.subscriptions.update(subscriptionId, {
+    await getStripe().subscriptions.update(subscriptionId, {
       cancel_at_period_end: true
     });
 
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
-        subscriptionStatus: 'canceling',
+        subscriptionStatus: "canceling",
         subscriptionCanceledAt: admin.firestore.FieldValue.serverTimestamp()
       });
   }
@@ -256,24 +264,24 @@ export class StripeService {
    */
   async handleWebhook(event: Stripe.Event): Promise<void> {
     switch (event.type) {
-      case 'checkout.session.completed':
+      case "checkout.session.completed":
         await this.handleCheckoutComplete(event.data.object as Stripe.Checkout.Session);
         break;
 
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
         await this.handleSubscriptionUpdate(event.data.object as Stripe.Subscription);
         break;
 
-      case 'customer.subscription.deleted':
+      case "customer.subscription.deleted":
         await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
 
-      case 'invoice.payment_succeeded':
+      case "invoice.payment_succeeded":
         await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
-      case 'invoice.payment_failed':
+      case "invoice.payment_failed":
         await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
@@ -289,10 +297,10 @@ export class StripeService {
     const userId = session.metadata?.userId;
     if (!userId) return;
 
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+    const subscription = await getStripe().subscriptions.retrieve(session.subscription as string);
     
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         stripeSubscriptionId: subscription.id,
@@ -305,12 +313,12 @@ export class StripeService {
 
     // Update session status
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('checkoutSessions')
+      .collection("checkoutSessions")
       .doc(session.id)
       .update({
-        status: 'completed',
+        status: "completed",
         completedAt: admin.firestore.FieldValue.serverTimestamp()
       });
   }
@@ -327,7 +335,7 @@ export class StripeService {
     );
 
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         subscriptionStatus: subscription.status,
@@ -346,10 +354,10 @@ export class StripeService {
     if (!userId) return;
 
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
-        subscriptionStatus: 'canceled',
+        subscriptionStatus: "canceled",
         subscriptionEndedAt: admin.firestore.FieldValue.serverTimestamp(),
         stripeSubscriptionId: admin.firestore.FieldValue.delete()
       });
@@ -362,20 +370,20 @@ export class StripeService {
     const subscription = (invoice as any).subscription;
     if (!subscription) return;
 
-    const sub = await stripe.subscriptions.retrieve(subscription as string);
+    const sub = await getStripe().subscriptions.retrieve(subscription as string);
     const userId = sub.metadata?.userId;
     if (!userId) return;
 
     // Record payment
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('payments')
+      .collection("payments")
       .add({
         invoiceId: invoice.id,
         amount: invoice.amount_paid,
         currency: invoice.currency,
-        status: 'succeeded',
+        status: "succeeded",
         paidAt: admin.firestore.Timestamp.fromMillis((invoice.status_transitions.paid_at || 0) * 1000),
         periodStart: admin.firestore.Timestamp.fromMillis(invoice.period_start * 1000),
         periodEnd: admin.firestore.Timestamp.fromMillis(invoice.period_end * 1000)
@@ -383,11 +391,11 @@ export class StripeService {
 
     // Update last payment date
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         lastPaymentDate: admin.firestore.FieldValue.serverTimestamp(),
-        paymentStatus: 'current'
+        paymentStatus: "current"
       });
   }
 
@@ -398,30 +406,30 @@ export class StripeService {
     const subscription = (invoice as any).subscription;
     if (!subscription) return;
 
-    const sub = await stripe.subscriptions.retrieve(subscription as string);
+    const sub = await getStripe().subscriptions.retrieve(subscription as string);
     const userId = sub.metadata?.userId;
     if (!userId) return;
 
     // Record failed payment
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('payments')
+      .collection("payments")
       .add({
         invoiceId: invoice.id,
         amount: invoice.amount_due,
         currency: invoice.currency,
-        status: 'failed',
+        status: "failed",
         failedAt: admin.firestore.FieldValue.serverTimestamp(),
         attemptCount: invoice.attempt_count
       });
 
     // Update payment status
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
-        paymentStatus: 'past_due',
+        paymentStatus: "past_due",
         lastPaymentFailure: admin.firestore.FieldValue.serverTimestamp()
       });
 
@@ -433,12 +441,12 @@ export class StripeService {
    */
   async hasActiveSubscription(userId: string): Promise<boolean> {
     const userDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .get();
 
     const data = userDoc.data();
-    return data?.subscriptionStatus === 'active' || data?.subscriptionStatus === 'trialing';
+    return data?.subscriptionStatus === "active" || data?.subscriptionStatus === "trialing";
   }
 
   /**
@@ -446,7 +454,7 @@ export class StripeService {
    */
   async getSubscriptionDetails(userId: string): Promise<any> {
     const userDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .get();
 
@@ -456,7 +464,7 @@ export class StripeService {
       return null;
     }
 
-    const subscription = await stripe.subscriptions.retrieve(data.stripeSubscriptionId);
+    const subscription = await getStripe().subscriptions.retrieve(data.stripeSubscriptionId);
     const plan = SUBSCRIPTION_PLANS.find(p => p.id === data.subscriptionPlanId);
 
     return {

@@ -1,16 +1,14 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth, functions } from '@/lib/firebase/firebase';
 import { httpsCallable } from 'firebase/functions';
-import AnimatedLogo from '../components/AnimatedLogo';
 import type { FirebaseFunctions, SubscriptionStatus } from '@/types/api';
-import styles from './dashboard.module.css';
 
 interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  type: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
   properties?: Property[];
@@ -28,10 +26,6 @@ interface Property {
   type: string;
   imageUrl?: string;
   yearBuilt?: number;
-  garage?: number;
-  lot?: string;
-  description?: string;
-  features?: string[];
   status?: 'active' | 'pending' | 'sold';
 }
 
@@ -43,13 +37,13 @@ interface Reminder {
   type: string;
 }
 
-const suggestedQueries = [
-  "Show me 4-bedroom homes under $900k in Austin",
-  "Add a new client named John Smith",
-  "What are my upcoming reminders?",
-  "Schedule a showing for tomorrow at 2pm",
-  "Search for waterfront properties",
-  "Show recent contacts"
+const commandSuggestions = [
+  "Search: 3BR homes under 1M in Austin",
+  "Add lead: John Smith, 512-555-0100",
+  "Schedule showing tomorrow 2pm",
+  "Show recent contacts",
+  "Find waterfront properties",
+  "Update contact Sarah Chen"
 ];
 
 export default function DashboardComplete() {
@@ -58,8 +52,7 @@ export default function DashboardComplete() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showSubscription, setShowSubscription] = useState(false);
+  const [showPanel, setShowPanel] = useState<'none' | 'settings' | 'subscription' | 'connections'>('none');
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [crmConnections, setCrmConnections] = useState({
@@ -68,14 +61,11 @@ export default function DashboardComplete() {
     real_geeks: false
   });
   
-  // Lazy initialize Firebase functions
   const [firebaseFunctions, setFirebaseFunctions] = useState<Partial<FirebaseFunctions>>({});
-  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Initialize Firebase functions when component mounts
     if (functions) {
       setFirebaseFunctions({
         processAgentCommand: httpsCallable(functions, 'processAgentCommand'),
@@ -117,12 +107,12 @@ export default function DashboardComplete() {
           }
         }
         
-        // Welcome message
+        // System welcome message
         if (messages.length === 0) {
           setMessages([{
             id: '1',
-            type: 'assistant',
-            content: `Welcome back! I'm your AI real estate assistant. I can help you search properties, manage clients, schedule showings, and track your deals. What would you like to do today?`,
+            type: 'system',
+            content: 'SYSTEM INITIALIZED. NEURAL INTERFACE ACTIVE. READY FOR COMMANDS.',
             timestamp: new Date()
           }]);
         }
@@ -153,9 +143,8 @@ export default function DashboardComplete() {
     setIsLoading(true);
 
     try {
-      // Call the real Firebase function
       if (!firebaseFunctions.processAgentCommand) {
-        throw new Error('Firebase functions not initialized');
+        throw new Error('Neural interface not connected');
       }
       
       const result = await firebaseFunctions.processAgentCommand({
@@ -163,53 +152,25 @@ export default function DashboardComplete() {
         sessionId: 'default'
       });
 
-      const response = result.data as { responseToUser?: string; data?: { properties?: Property[]; action?: string; suggestedFollowUps?: string[] } };
+      const response = result.data as { responseToUser?: string; data?: any };
       
-      // Handle property search results
-      if (response.data?.properties && response.data.properties.length > 0) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: response.responseToUser || `I found ${response.data.properties.length} properties matching your criteria.`,
-          timestamp: new Date(),
-          properties: response.data.properties,
-          action: response.data?.action
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: response.responseToUser || 'I processed your request.',
-          timestamp: new Date(),
-          action: response.data?.action
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }
-
-      // Handle suggested follow-ups
-      if (response.data?.suggestedFollowUps && response.data.suggestedFollowUps.length > 0) {
-        // Could add these as quick action buttons
-        console.log('Suggested follow-ups:', response.data.suggestedFollowUps);
-      }
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: response.responseToUser || 'COMMAND PROCESSED.',
+        timestamp: new Date(),
+        properties: response.data?.properties,
+        action: response.data?.action
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Error processing command:', error);
-      
-      let errorContent = 'I encountered an error processing your request.';
-      
-      // Provide more specific error messages
-      if (error.code === 'unauthenticated') {
-        errorContent = 'Please sign in to continue.';
-      } else if (error.code === 'failed-precondition') {
-        errorContent = error.message || 'Please connect your CRM first to use this feature.';
-      } else if (error.message?.includes('subscription')) {
-        errorContent = 'Please subscribe to access this feature.';
-      }
+      console.error('Neural processing error:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: errorContent,
+        type: 'system',
+        content: 'NEURAL PROCESSING ERROR. RECALIBRATING...',
         timestamp: new Date(),
         error: true
       };
@@ -223,13 +184,6 @@ export default function DashboardComplete() {
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
     inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e as React.FormEvent<HTMLFormElement>);
-    }
   };
 
   const connectCRM = async (crmType: 'wise_agent' | 'follow_up_boss' | 'real_geeks') => {
@@ -247,538 +201,356 @@ export default function DashboardComplete() {
           break;
       }
       
-      if (!authFunction) {
-        throw new Error('Auth function not initialized');
-      }
+      if (!authFunction) throw new Error('Protocol not initialized');
       
       const result = await authFunction();
       const { authUrl } = result.data as { authUrl: string };
       
-      // Open OAuth window
       window.open(authUrl, '_blank', 'width=600,height=700');
       
-      // Update connection status (would need polling or websocket for real-time update)
       setTimeout(() => {
         setCrmConnections(prev => ({ ...prev, [crmType]: true }));
       }, 5000);
     } catch (error) {
-      console.error(`Error connecting ${crmType}:`, error);
+      console.error(`Connection protocol failed: ${crmType}`, error);
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
+  const handleLogout = async () => {
     try {
-      if (!firebaseFunctions.createCheckoutSession) {
-        throw new Error('Checkout function not initialized');
-      }
-      
-      const result = await firebaseFunctions.createCheckoutSession({
-        planId,
-        successUrl: window.location.origin + '/dashboard?subscription=success',
-        cancelUrl: window.location.origin + '/dashboard?subscription=cancelled'
-      });
-      
-      const { url } = result.data as { url: string };
-      if (url) {
-        window.location.href = url;
-      }
+      await signOut(auth);
+      router.push('/');
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      console.error('Logout error:', error);
     }
   };
-
-  const PropertyCard = ({ property }: { property: Property }) => (
-    <div className={styles.propertyCard}>
-      <div className={styles.propertyImage}>
-        <img src={property.imageUrl} alt={property.address} />
-        <div className={`${styles.propertyStatus} ${
-          property.status === 'active' ? styles.statusActive :
-          property.status === 'pending' ? styles.statusPending :
-          styles.statusSold
-        }`}>
-          {property.status === 'active' ? 'Active' : 
-           property.status === 'pending' ? 'Pending' : 'Sold'}
-        </div>
-      </div>
-      <div className={styles.propertyDetails}>
-        <h3 className={styles.propertyAddress}>{property.address}</h3>
-        <div className={styles.propertyPrice}>${property.price.toLocaleString()}</div>
-        <div className={styles.propertyFeatures}>
-          <span>{property.beds} beds</span>
-          <span>{property.baths} baths</span>
-          <span>{property.sqft.toLocaleString()} sqft</span>
-        </div>
-        <p className={styles.propertyDescription}>{property.description}</p>
-        {property.features && (
-          <div className={styles.propertyTags}>
-            {property.features.map((feature, idx) => (
-              <span key={idx} className={styles.propertyTag}>{feature}</span>
-            ))}
-          </div>
-        )}
-        <div className={styles.propertyActions}>
-          <button className={styles.btnCardPrimary}>View Details</button>
-          <button className={styles.btnCardSecondary}>Schedule Showing</button>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
-    <div className={styles.chatContainer}>
-      <header className={styles.chatHeader}>
-        <div className={styles.headerContent}>
-          <AnimatedLogo size="sm" />
-          <div className={styles.userMenu}>
-            {subscriptionStatus?.hasActiveSubscription ? (
-              <span className="subscription-badge active">
-                {subscriptionStatus.subscriptionDetails?.plan?.name || 'Active'}
-              </span>
-            ) : (
-              <button onClick={() => setShowSubscription(true)} className="subscription-badge inactive">
-                Subscribe
-              </button>
-            )}
-            <button onClick={() => setShowSettings(true)} className="settings-btn">
-              Settings
+    <main className="min-h-screen" style={{ background: 'var(--color-base)' }}>
+      {/* Organic Background */}
+      <div className="organic-bg" />
+      
+      {/* Top Bar */}
+      <nav className="nav-nexus" style={{ position: 'relative' }}>
+        <div className="nav-container">
+          <div className="flex items-center gap-8">
+            <span className="logo-nexus">ESTAIT</span>
+            <div className="caption" style={{ opacity: 0.5 }}>
+              NEURAL COMMAND INTERFACE v3.0
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button 
+              className="btn-nexus btn-nexus-icon"
+              onClick={() => setShowPanel(showPanel === 'connections' ? 'none' : 'connections')}
+              title="CRM Connections"
+            >
+              ◈
             </button>
-            {user && <span className={styles.userEmail}>{user.email}</span>}
-            <button onClick={() => auth.signOut()} className={styles.logoutButton}>
-              Sign Out
+            <button 
+              className="btn-nexus btn-nexus-icon"
+              onClick={() => setShowPanel(showPanel === 'subscription' ? 'none' : 'subscription')}
+              title="Subscription"
+            >
+              ◉
+            </button>
+            <button 
+              className="btn-nexus btn-nexus-icon"
+              onClick={() => setShowPanel(showPanel === 'settings' ? 'none' : 'settings')}
+              title="Settings"
+            >
+              ⚙
+            </button>
+            <button 
+              className="btn-nexus btn-nexus-text"
+              onClick={handleLogout}
+            >
+              DISCONNECT
             </button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main className={styles.chatMain}>
-        {/* Reminders Sidebar */}
-        {reminders.length > 0 && (
-          <div className="reminders-sidebar">
-            <h3>Upcoming Reminders</h3>
-            {reminders.map((reminder) => (
-              <div key={reminder.id} className="reminder-item">
-                <p>{reminder.message}</p>
-                <span className="reminder-time">
-                  {new Date(reminder.scheduledFor).toLocaleDateString()}
-                </span>
+      {/* Main Container */}
+      <div className="container-nexus" style={{ paddingTop: '100px', maxWidth: '1400px' }}>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Panel - Status & Reminders */}
+          <div className="lg:col-span-1">
+            {/* User Status */}
+            <div className="card-nexus mb-6">
+              <div className="caption mb-2">AGENT STATUS</div>
+              <div style={{ fontFamily: 'var(--font-pixel)', fontSize: '14px', lineHeight: '2' }}>
+                <div>ID: {user?.email?.split('@')[0]?.toUpperCase() || 'UNKNOWN'}</div>
+                <div>STATUS: <span style={{ color: 'var(--color-primary)' }}>ONLINE</span></div>
+                <div>SUBSCRIPTION: {subscriptionStatus?.hasActiveSubscription ? 'ACTIVE' : 'INACTIVE'}</div>
+                <div>NEURAL SYNC: 98.7%</div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
 
-        <div className={styles.messagesContainer}>
-          {messages.map((message) => (
-            <div key={message.id} className={styles.message}>
-              <div className={`${styles.messageAvatar} ${
-                message.type === 'user' ? styles.userAvatar : styles.assistantAvatar
-              }`}>
-                {message.type === 'user' ? 'U' : 'AI'}
-              </div>
-              <div className={styles.messageContent}>
-                <div className={`${styles.messageBubble} ${
-                  message.type === 'user' ? styles.userBubble : ''
-                } ${message.error ? 'error-message' : ''}`}>
-                  {message.content}
+            {/* Reminders */}
+            <div className="card-nexus mb-6">
+              <div className="caption mb-4">UPCOMING PROTOCOLS</div>
+              {reminders.length > 0 ? (
+                <div style={{ fontFamily: 'var(--font-pixel)', fontSize: '13px' }}>
+                  {reminders.map((reminder, i) => (
+                    <div key={reminder.id} className="mb-3" style={{ opacity: 1 - (i * 0.15) }}>
+                      <div style={{ color: 'var(--color-primary)' }}>
+                        → {new Date(reminder.scheduledFor).toLocaleString()}
+                      </div>
+                      <div style={{ opacity: 0.7, marginLeft: '16px' }}>
+                        {reminder.message}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {message.properties && (
-                  <div className={styles.propertiesGrid}>
-                    {message.properties.map((property) => (
-                      <PropertyCard key={property.id} property={property} />
-                    ))}
+              ) : (
+                <div className="caption" style={{ opacity: 0.5 }}>NO ACTIVE PROTOCOLS</div>
+              )}
+            </div>
+
+            {/* Quick Commands */}
+            <div className="card-nexus">
+              <div className="caption mb-4">COMMAND TEMPLATES</div>
+              <div className="space-y-2">
+                {commandSuggestions.map((suggestion, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full text-left p-2 rounded transition-all"
+                    style={{
+                      fontFamily: 'var(--font-pixel)',
+                      fontSize: '12px',
+                      color: 'var(--color-primary)',
+                      background: 'var(--color-primary-opacity-10)',
+                      border: '1px solid var(--color-primary-opacity-20)',
+                      opacity: 0.8
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.background = 'var(--color-primary-opacity-20)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                      e.currentTarget.style.background = 'var(--color-primary-opacity-10)';
+                    }}
+                  >
+                    → {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Center - Main Interface */}
+          <div className="lg:col-span-2">
+            <div className="card-nexus" style={{ height: '70vh', display: 'flex', flexDirection: 'column' }}>
+              {/* Terminal Header */}
+              <div className="caption mb-4" style={{ borderBottom: '1px solid var(--color-primary-opacity-20)', paddingBottom: '12px' }}>
+                NEURAL COMMAND TERMINAL | 
+                USER: {user?.email?.toUpperCase() || 'ANONYMOUS'} | 
+                SESSION: {new Date().toISOString().split('T')[0]}
+              </div>
+              
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto mb-4" style={{ 
+                background: 'var(--color-primary-opacity-10)', 
+                borderRadius: 'var(--border-radius)',
+                padding: '16px'
+              }}>
+                {messages.map((message) => (
+                  <div key={message.id} className="mb-4">
+                    <div style={{ 
+                      fontFamily: 'var(--font-pixel)', 
+                      fontSize: '14px',
+                      color: message.type === 'user' 
+                        ? 'var(--color-primary)' 
+                        : message.type === 'system'
+                        ? 'var(--color-primary-opacity-40)'
+                        : 'var(--color-primary)',
+                      opacity: message.error ? 0.5 : (message.type === 'user' ? 1 : 0.9)
+                    }}>
+                      <span style={{ opacity: 0.5 }}>
+                        {message.type === 'user' ? '> USER: ' : 
+                         message.type === 'system' ? '> SYSTEM: ' : 
+                         '> AI: '}
+                      </span>
+                      {message.content}
+                    </div>
+                    
+                    {/* Property Cards */}
+                    {message.properties && message.properties.length > 0 && (
+                      <div className="grid md:grid-cols-2 gap-4 mt-4">
+                        {message.properties.map((property) => (
+                          <div key={property.id} className="card-nexus" style={{ padding: '16px' }}>
+                            <div style={{ fontFamily: 'var(--font-pixel)', fontSize: '13px' }}>
+                              <div style={{ color: 'var(--color-primary)', marginBottom: '8px' }}>
+                                {property.address}
+                              </div>
+                              <div style={{ opacity: 0.7, lineHeight: '1.6' }}>
+                                PRICE: ${property.price.toLocaleString()}<br/>
+                                SPECS: {property.beds}BR | {property.baths}BA | {property.sqft} SQFT<br/>
+                                TYPE: {property.type.toUpperCase()}<br/>
+                                STATUS: <span style={{ color: property.status === 'active' ? 'var(--color-primary)' : 'var(--color-primary-opacity-40)' }}>
+                                  {property.status?.toUpperCase() || 'ACTIVE'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="caption animate-pulse">
+                    PROCESSING NEURAL PATTERNS...
                   </div>
                 )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Form */}
+              <form onSubmit={handleSubmit} className="flex gap-4">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Enter command..."
+                  className="input-nexus flex-1"
+                  disabled={isLoading}
+                />
+                <button 
+                  type="submit" 
+                  className="btn-nexus btn-nexus-text"
+                  disabled={isLoading}
+                  style={{ minWidth: '120px' }}
+                >
+                  {isLoading ? 'PROCESSING' : 'EXECUTE'}
+                </button>
+              </form>
+
+              {/* Status Bar */}
+              <div className="caption mt-4" style={{ opacity: 0.5, fontSize: '12px' }}>
+                LATENCY: {'<'}20MS | 
+                ENCRYPTION: AES-256 | 
+                NEURAL BANDWIDTH: 98.7% | 
+                {messages.length} COMMANDS PROCESSED
               </div>
             </div>
-          ))}
-          {isLoading && (
-            <div className={styles.message}>
-              <div className={`${styles.messageAvatar} ${styles.assistantAvatar}`}>AI</div>
-              <div className={styles.messageContent}>
-                <div className={styles.loadingDots}>
-                  <div className={styles.loadingDot}></div>
-                  <div className={styles.loadingDot}></div>
-                  <div className={styles.loadingDot}></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {messages.length === 1 && (
-          <div className={styles.suggestionsContainer}>
-            {suggestedQueries.map((suggestion, idx) => (
-              <button
-                key={idx}
-                className={styles.suggestionChip}
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
+        {/* Panels */}
+        {showPanel !== 'none' && (
+          <div className="fixed inset-0 z-50" style={{ background: 'rgba(0,0,0,0.8)' }} onClick={() => setShowPanel('none')}>
+            <div className="card-nexus" style={{ 
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              maxWidth: '600px',
+              width: '90%',
+              padding: '48px'
+            }} onClick={(e) => e.stopPropagation()}>
+              {showPanel === 'connections' && (
+                <>
+                  <div className="h2-dual mb-8">
+                    <h2 className="h2-pixel" style={{ fontSize: '32px' }}>CRM PROTOCOLS</h2>
+                    <span className="h2-serif" style={{ fontSize: '32px' }}>CRM Protocols</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-4" style={{ 
+                      background: 'var(--color-primary-opacity-10)',
+                      borderRadius: 'var(--border-radius)'
+                    }}>
+                      <span className="caption">WISE AGENT</span>
+                      {crmConnections.wise_agent ? (
+                        <span style={{ color: 'var(--color-primary)' }}>CONNECTED</span>
+                      ) : (
+                        <button className="btn-nexus btn-nexus-text" onClick={() => connectCRM('wise_agent')}>
+                          CONNECT
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center p-4" style={{ 
+                      background: 'var(--color-primary-opacity-10)',
+                      borderRadius: 'var(--border-radius)'
+                    }}>
+                      <span className="caption">FOLLOW UP BOSS</span>
+                      {crmConnections.follow_up_boss ? (
+                        <span style={{ color: 'var(--color-primary)' }}>CONNECTED</span>
+                      ) : (
+                        <button className="btn-nexus btn-nexus-text" onClick={() => connectCRM('follow_up_boss')}>
+                          CONNECT
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center p-4" style={{ 
+                      background: 'var(--color-primary-opacity-10)',
+                      borderRadius: 'var(--border-radius)'
+                    }}>
+                      <span className="caption">REAL GEEKS</span>
+                      {crmConnections.real_geeks ? (
+                        <span style={{ color: 'var(--color-primary)' }}>CONNECTED</span>
+                      ) : (
+                        <button className="btn-nexus btn-nexus-text" onClick={() => connectCRM('real_geeks')}>
+                          CONNECT
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {showPanel === 'subscription' && (
+                <>
+                  <div className="h2-dual mb-8">
+                    <h2 className="h2-pixel" style={{ fontSize: '32px' }}>SUBSCRIPTION MATRIX</h2>
+                    <span className="h2-serif" style={{ fontSize: '32px' }}>Subscription Matrix</span>
+                  </div>
+                  {subscriptionStatus?.hasActiveSubscription ? (
+                    <div className="caption">
+                      STATUS: ACTIVE<br/>
+                      PLAN: {subscriptionStatus.subscriptionDetails?.plan?.name}<br/>
+                      EXPIRES: {subscriptionStatus.subscriptionDetails?.currentPeriodEnd}
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="body-text mb-6">UPGRADE TO UNLOCK FULL NEURAL CAPACITY</p>
+                      <div className="flex gap-4 justify-center">
+                        <button className="btn-nexus btn-nexus-text">
+                          BASIC PROTOCOL
+                        </button>
+                        <button className="btn-nexus btn-nexus-text">
+                          ADVANCED PROTOCOL
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {showPanel === 'settings' && (
+                <>
+                  <div className="h2-dual mb-8">
+                    <h2 className="h2-pixel" style={{ fontSize: '32px' }}>SYSTEM CONFIGURATION</h2>
+                    <span className="h2-serif" style={{ fontSize: '32px' }}>System Configuration</span>
+                  </div>
+                  <div className="caption" style={{ lineHeight: '2' }}>
+                    NEURAL CALIBRATION: OPTIMAL<br/>
+                    VOICE PROCESSING: ENABLED<br/>
+                    ENCRYPTION: AES-256<br/>
+                    DATA RETENTION: 90 DAYS<br/>
+                    API VERSION: 3.0.1
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
-
-        <form onSubmit={handleSubmit} className={styles.inputContainer}>
-          <div className={styles.inputWrapper}>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask me anything about real estate..."
-              className={styles.chatInput}
-              rows={1}
-              disabled={isLoading}
-            />
-          </div>
-          <button
-            type="submit"
-            className={styles.sendButton}
-            disabled={!input.trim() || isLoading}
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </button>
-        </form>
-      </main>
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Settings</h2>
-            
-            <div className="settings-section">
-              <h3>CRM Connections</h3>
-              <div className="crm-list">
-                <div className="crm-item">
-                  <span>Wise Agent</span>
-                  {crmConnections.wise_agent ? (
-                    <span className="status connected">Connected</span>
-                  ) : (
-                    <button onClick={() => connectCRM('wise_agent')}>Connect</button>
-                  )}
-                </div>
-                <div className="crm-item">
-                  <span>Follow Up Boss</span>
-                  {crmConnections.follow_up_boss ? (
-                    <span className="status connected">Connected</span>
-                  ) : (
-                    <button onClick={() => connectCRM('follow_up_boss')}>Connect</button>
-                  )}
-                </div>
-                <div className="crm-item">
-                  <span>Real Geeks</span>
-                  {crmConnections.real_geeks ? (
-                    <span className="status connected">Connected</span>
-                  ) : (
-                    <button onClick={() => connectCRM('real_geeks')}>Connect</button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="settings-section">
-              <h3>Notification Preferences</h3>
-              <label>
-                <input type="checkbox" defaultChecked /> Email notifications
-              </label>
-              <label>
-                <input type="checkbox" /> SMS notifications
-              </label>
-              <label>
-                <input type="checkbox" defaultChecked /> In-app notifications
-              </label>
-            </div>
-
-            <button onClick={() => setShowSettings(false)} className="close-btn">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Subscription Modal */}
-      {showSubscription && (
-        <div className="modal-overlay" onClick={() => setShowSubscription(false)}>
-          <div className="modal-content subscription-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Choose Your Plan</h2>
-            
-            <div className="plans-grid">
-              <div className="plan-card">
-                <h3>Basic</h3>
-                <div className="price">$99/mo</div>
-                <ul>
-                  <li>100 contacts</li>
-                  <li>500 AI requests/month</li>
-                  <li>Basic CRM integration</li>
-                  <li>Email support</li>
-                </ul>
-                <button onClick={() => handleSubscribe('basic')}>
-                  Get Started
-                </button>
-              </div>
-              
-              <div className="plan-card featured">
-                <div className="badge">Most Popular</div>
-                <h3>Professional</h3>
-                <div className="price">$199/mo</div>
-                <ul>
-                  <li>Unlimited contacts</li>
-                  <li>2000 AI requests/month</li>
-                  <li>All CRM integrations</li>
-                  <li>Smart reminders</li>
-                  <li>Priority support</li>
-                </ul>
-                <button onClick={() => handleSubscribe('professional')}>
-                  Get Started
-                </button>
-              </div>
-              
-              <div className="plan-card">
-                <h3>Enterprise</h3>
-                <div className="price">$499/mo</div>
-                <ul>
-                  <li>Everything in Pro</li>
-                  <li>Unlimited AI requests</li>
-                  <li>Custom integrations</li>
-                  <li>Dedicated manager</li>
-                  <li>API access</li>
-                </ul>
-                <button onClick={() => handleSubscribe('enterprise')}>
-                  Contact Sales
-                </button>
-              </div>
-            </div>
-
-            <button onClick={() => setShowSubscription(false)} className="close-btn">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
-        .subscription-badge {
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        .subscription-badge.active {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          color: white;
-        }
-        
-        .subscription-badge.inactive {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          color: white;
-          border: none;
-        }
-        
-        .settings-btn {
-          padding: 8px 16px;
-          background: transparent;
-          color: #667eea;
-          border: 1px solid #667eea;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        .reminders-sidebar {
-          position: fixed;
-          right: 20px;
-          top: 100px;
-          width: 300px;
-          background: white;
-          border-radius: 16px;
-          padding: 20px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .reminder-item {
-          padding: 12px;
-          margin-bottom: 12px;
-          background: rgba(102, 126, 234, 0.05);
-          border-radius: 8px;
-          border-left: 3px solid #667eea;
-        }
-        
-        .reminder-time {
-          font-size: 12px;
-          color: #999;
-        }
-        
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-        
-        .modal-content {
-          background: white;
-          border-radius: 24px;
-          padding: 32px;
-          max-width: 600px;
-          width: 90%;
-          max-height: 80vh;
-          overflow-y: auto;
-        }
-        
-        .subscription-modal {
-          max-width: 900px;
-        }
-        
-        .settings-section {
-          margin-bottom: 24px;
-        }
-        
-        .settings-section h3 {
-          margin-bottom: 16px;
-          color: #333;
-        }
-        
-        .crm-list {
-          space-y: 12px;
-        }
-        
-        .crm-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px;
-          background: #f5f5f5;
-          border-radius: 8px;
-          margin-bottom: 8px;
-        }
-        
-        .status.connected {
-          color: #10b981;
-          font-weight: 600;
-        }
-        
-        .plans-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-          margin: 32px 0;
-        }
-        
-        .plan-card {
-          padding: 24px;
-          border: 2px solid #e5e5e5;
-          border-radius: 16px;
-          text-align: center;
-          position: relative;
-        }
-        
-        .plan-card.featured {
-          border-color: #667eea;
-          transform: scale(1.05);
-        }
-        
-        .badge {
-          position: absolute;
-          top: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #667eea;
-          color: white;
-          padding: 4px 16px;
-          border-radius: 20px;
-          font-size: 12px;
-        }
-        
-        .price {
-          font-size: 36px;
-          font-weight: 700;
-          color: #667eea;
-          margin: 16px 0;
-        }
-        
-        .plan-card ul {
-          list-style: none;
-          padding: 0;
-          margin: 24px 0;
-        }
-        
-        .plan-card li {
-          padding: 8px 0;
-          color: #666;
-        }
-        
-        .plan-card button {
-          width: 100%;
-          padding: 12px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        .plan-card button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .close-btn {
-          margin-top: 24px;
-          padding: 12px 24px;
-          background: #f5f5f5;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-        
-        .error-message {
-          background: #fee2e2 !important;
-          color: #dc2626 !important;
-        }
-        
-        label {
-          display: block;
-          padding: 8px 0;
-          cursor: pointer;
-        }
-        
-        label input {
-          margin-right: 8px;
-        }
-        
-        @media (max-width: 768px) {
-          .plans-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .plan-card.featured {
-            transform: none;
-          }
-          
-          .reminders-sidebar {
-            position: static;
-            width: 100%;
-            margin-bottom: 20px;
-          }
-        }
-      `}</style>
-    </div>
+      </div>
+    </main>
   );
 }

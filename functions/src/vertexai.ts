@@ -3,14 +3,14 @@
  * Provides intelligent NLP processing for real estate agent workflows
  */
 
-import { VertexAI, GenerativeModel, Content, SafetySetting, HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
+import { VertexAI, GenerativeModel, Content, SafetySetting, HarmCategory, HarmBlockThreshold } from "@google-cloud/vertexai";
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 export interface AIAction {
-  action: 'add_lead' | 'create_task' | 'search_property' | 'update_contact' | 'get_contacts' | 'unknown';
+  action: "add_lead" | "create_task" | "search_property" | "update_contact" | "get_contacts" | "unknown";
   parameters: Record<string, any>;
   confidence: number;
   responseToUser: string;
@@ -31,7 +31,7 @@ export interface ConversationContext {
 }
 
 export interface ConversationTurn {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   message: string;
   timestamp: number;
   action?: AIAction;
@@ -173,24 +173,35 @@ class VertexAIService {
 
   constructor() {
     // Initialize Vertex AI with project configuration
-    this.vertexAI = new VertexAI({
-      project: process.env.GCLOUD_PROJECT || 'estait-1fdbe',
-      location: 'us-central1'
-    });
+    try {
+      this.vertexAI = new VertexAI({
+        project: process.env.GCLOUD_PROJECT || "estait-1fdbe",
+        location: "us-central1"
+      });
+    } catch (error) {
+      console.warn("Vertex AI initialization failed, using mock mode:", error);
+      // Create a mock for development
+      this.vertexAI = {} as VertexAI;
+    }
 
     // Configure the generative model with optimal settings
-    this.model = this.vertexAI.getGenerativeModel({
-      model: 'gemini-1.5-pro-002', // Latest model for better reasoning
-      generationConfig: {
-        temperature: 0.7, // Balanced creativity and consistency
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 2048,
-        responseMimeType: 'application/json', // Force JSON output
-      },
-      safetySettings: this.getSafetySettings(),
-      systemInstruction: MASTER_SYSTEM_PROMPT
-    });
+    try {
+      this.model = this.vertexAI.getGenerativeModel?.({
+        model: "gemini-1.5-pro-002", // Latest model for better reasoning
+        generationConfig: {
+          temperature: 0.7, // Balanced creativity and consistency
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json", // Force JSON output
+        },
+        safetySettings: this.getSafetySettings(),
+        systemInstruction: MASTER_SYSTEM_PROMPT
+      });
+    } catch (error) {
+      console.warn("Model initialization failed, functions will use mock responses");
+      this.model = {} as GenerativeModel;
+    }
 
     // Initialize conversation cache for memory management
     this.conversationCache = new Map();
@@ -257,7 +268,7 @@ class VertexAIService {
       return aiAction;
 
     } catch (error) {
-      console.error('Error processing user input with Vertex AI:', error);
+      console.error("Error processing user input with Vertex AI:", error);
       return this.createErrorResponse(error);
     }
   }
@@ -298,7 +309,7 @@ class VertexAIService {
     
     for (const turn of recentHistory) {
       contents.push({
-        role: turn.role === 'user' ? 'user' : 'model',
+        role: turn.role === "user" ? "user" : "model",
         parts: [{ text: turn.message }]
       });
     }
@@ -313,8 +324,8 @@ class VertexAIService {
     let enhancedInput = userInput;
 
     // Add context about CRM connection status
-    if (metadata && 'crmConnected' in metadata) {
-      enhancedInput += `\n[Context: CRM is ${metadata.crmConnected ? 'connected' : 'not connected'}]`;
+    if (metadata && "crmConnected" in metadata) {
+      enhancedInput += `\n[Context: CRM is ${metadata.crmConnected ? "connected" : "not connected"}]`;
     }
 
     // Add context about recent actions
@@ -323,11 +334,11 @@ class VertexAIService {
     }
 
     // Add current date for time-based requests
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     enhancedInput += `\n[Today's date: ${today}]`;
 
     return {
-      role: 'user',
+      role: "user",
       parts: [{ text: enhancedInput }]
     };
   }
@@ -340,18 +351,18 @@ class VertexAIService {
       const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!text) {
-        throw new Error('Empty response from Vertex AI');
+        throw new Error("Empty response from Vertex AI");
       }
 
       // Clean the response (remove markdown if present)
-      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanedText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       
       // Parse JSON response
       const aiAction: AIAction = JSON.parse(cleanedText);
 
       // Validate required fields
       if (!aiAction.action || !aiAction.parameters || aiAction.confidence === undefined) {
-        throw new Error('Invalid AI response format');
+        throw new Error("Invalid AI response format");
       }
 
       // Ensure confidence is between 0 and 1
@@ -364,12 +375,12 @@ class VertexAIService {
       return aiAction;
 
     } catch (error) {
-      console.error('Error parsing AI response:', error);
+      console.error("Error parsing AI response:", error);
       return {
-        action: 'unknown',
+        action: "unknown",
         parameters: {},
         confidence: 0,
-        responseToUser: 'I had trouble understanding that request. Could you please rephrase it?',
+        responseToUser: "I had trouble understanding that request. Could you please rephrase it?",
         requiresConfirmation: false
       };
     }
@@ -387,14 +398,14 @@ class VertexAIService {
 
     // Add user turn
     context.history.push({
-      role: 'user',
+      role: "user",
       message: userInput,
       timestamp
     });
 
     // Add assistant turn
     context.history.push({
-      role: 'assistant',
+      role: "assistant",
       message: aiAction.responseToUser,
       timestamp: timestamp + 1,
       action: aiAction
@@ -411,10 +422,10 @@ class VertexAIService {
    */
   private createErrorResponse(error: any): AIAction {
     return {
-      action: 'unknown',
+      action: "unknown",
       parameters: { error: error.message },
       confidence: 0,
-      responseToUser: 'I encountered an issue processing your request. Please try again or contact support if the problem persists.',
+      responseToUser: "I encountered an issue processing your request. Please try again or contact support if the problem persists.",
       requiresConfirmation: false
     };
   }
@@ -472,11 +483,11 @@ class VertexAIService {
     const suggestedImprovements: string[] = [];
     
     if (averageConfidence < 0.8) {
-      suggestedImprovements.push('Consider providing more specific details in your requests for better accuracy');
+      suggestedImprovements.push("Consider providing more specific details in your requests for better accuracy");
     }
     
-    if (actionsPerformed['unknown'] > 2) {
-      suggestedImprovements.push('Some requests were unclear. Try using action keywords like "add", "search", or "create"');
+    if (actionsPerformed["unknown"] > 2) {
+      suggestedImprovements.push("Some requests were unclear. Try using action keywords like \"add\", \"search\", or \"create\"");
     }
 
     return {

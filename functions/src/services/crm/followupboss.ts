@@ -3,9 +3,9 @@
  * Handles OAuth flow and API interactions for Follow Up Boss
  */
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions/v1';
-import { encrypt, decrypt } from '../../lib/security';
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions/v1";
+import { encrypt, decrypt } from "../../lib/security";
 
 export interface FollowUpBossTokenResponse {
   access_token: string;
@@ -33,11 +33,11 @@ export interface FollowUpBossTask {
   userId?: string;
   personId?: string;
   isCompleted?: boolean;
-  type?: 'Call' | 'Email' | 'Text' | 'Meeting' | 'Other';
+  type?: "Call" | "Email" | "Text" | "Meeting" | "Other";
 }
 
 export class FollowUpBossService {
-  private readonly baseUrl = 'https://api.followupboss.com/v1';
+  private readonly baseUrl = "https://api.followupboss.com/v1";
   
   /**
    * Get OAuth authorization URL
@@ -48,17 +48,17 @@ export class FollowUpBossService {
     
     if (!clientId) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Follow Up Boss client ID is not configured.'
+        "failed-precondition",
+        "Follow Up Boss client ID is not configured."
       );
     }
     
     const params = new URLSearchParams({
-      response_type: 'code',
+      response_type: "code",
       client_id: clientId,
       redirect_uri: redirectUri,
       state: userId,
-      scope: 'read write'
+      scope: "read write"
     });
     
     return `https://api.followupboss.com/oauth/authorize?${params.toString()}`;
@@ -74,17 +74,17 @@ export class FollowUpBossService {
                         functions.config().followupboss?.client_secret;
     
     if (!clientId || !clientSecret) {
-      throw new Error('Follow Up Boss credentials are not configured.');
+      throw new Error("Follow Up Boss credentials are not configured.");
     }
     
-    const response = await fetch('https://api.followupboss.com/oauth/token', {
-      method: 'POST',
+    const response = await fetch("https://api.followupboss.com/oauth/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
       },
       body: new URLSearchParams({
-        grant_type: 'authorization_code',
+        grant_type: "authorization_code",
         code,
         client_id: clientId,
         client_secret: clientSecret,
@@ -110,17 +110,17 @@ export class FollowUpBossService {
                         functions.config().followupboss?.client_secret;
     
     if (!clientId || !clientSecret) {
-      throw new Error('Follow Up Boss credentials are not configured.');
+      throw new Error("Follow Up Boss credentials are not configured.");
     }
     
-    const response = await fetch('https://api.followupboss.com/oauth/token', {
-      method: 'POST',
+    const response = await fetch("https://api.followupboss.com/oauth/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
       },
       body: new URLSearchParams({
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         refresh_token: refreshToken,
         client_id: clientId,
         client_secret: clientSecret
@@ -142,10 +142,10 @@ export class FollowUpBossService {
     const expiresAt = Date.now() + (tokens.expires_in * 1000);
     
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('credentials')
-      .doc('follow_up_boss')
+      .collection("credentials")
+      .doc("follow_up_boss")
       .set({
         accessToken: encrypt(tokens.access_token),
         refreshToken: encrypt(tokens.refresh_token),
@@ -155,11 +155,11 @@ export class FollowUpBossService {
       });
     
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         crmConnected: true,
-        crmType: 'follow_up_boss',
+        crmType: "follow_up_boss",
         crmConnectedAt: admin.firestore.FieldValue.serverTimestamp()
       });
   }
@@ -169,24 +169,24 @@ export class FollowUpBossService {
    */
   async getValidAccessToken(userId: string): Promise<string> {
     const tokenDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('credentials')
-      .doc('follow_up_boss')
+      .collection("credentials")
+      .doc("follow_up_boss")
       .get();
     
     if (!tokenDoc.exists || !tokenDoc.data()) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Follow Up Boss is not connected for this user.'
+        "failed-precondition",
+        "Follow Up Boss is not connected for this user."
       );
     }
     
     const data = tokenDoc.data();
     if (!data?.accessToken || !data?.refreshToken) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'No tokens found for Follow Up Boss.'
+        "failed-precondition",
+        "No tokens found for Follow Up Boss."
       );
     }
     
@@ -203,10 +203,10 @@ export class FollowUpBossService {
         await this.storeTokens(userId, newTokens);
         return newTokens.access_token;
       } catch (error) {
-        console.error('Failed to refresh Follow Up Boss token:', error);
+        console.error("Failed to refresh Follow Up Boss token:", error);
         throw new functions.https.HttpsError(
-          'unauthenticated',
-          'Failed to refresh Follow Up Boss authentication. Please reconnect your account.'
+          "unauthenticated",
+          "Failed to refresh Follow Up Boss authentication. Please reconnect your account."
         );
       }
     }
@@ -227,9 +227,9 @@ export class FollowUpBossService {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
         ...options.headers
       }
     });
@@ -246,8 +246,8 @@ export class FollowUpBossService {
    * Add a new contact
    */
   async addContact(userId: string, contact: FollowUpBossContact): Promise<any> {
-    return await this.makeApiRequest(userId, '/people', {
-      method: 'POST',
+    return await this.makeApiRequest(userId, "/people", {
+      method: "POST",
       body: JSON.stringify(contact)
     });
   }
@@ -257,7 +257,7 @@ export class FollowUpBossService {
    */
   async updateContact(userId: string, contactId: string, updates: Partial<FollowUpBossContact>): Promise<any> {
     return await this.makeApiRequest(userId, `/people/${contactId}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(updates)
     });
   }
@@ -282,7 +282,7 @@ export class FollowUpBossService {
       });
     }
     
-    const endpoint = `/people${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/people${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return await this.makeApiRequest(userId, endpoint);
   }
   
@@ -297,8 +297,8 @@ export class FollowUpBossService {
    * Add a task
    */
   async addTask(userId: string, task: FollowUpBossTask): Promise<any> {
-    return await this.makeApiRequest(userId, '/tasks', {
-      method: 'POST',
+    return await this.makeApiRequest(userId, "/tasks", {
+      method: "POST",
       body: JSON.stringify(task)
     });
   }
@@ -308,7 +308,7 @@ export class FollowUpBossService {
    */
   async updateTask(userId: string, taskId: string, updates: Partial<FollowUpBossTask>): Promise<any> {
     return await this.makeApiRequest(userId, `/tasks/${taskId}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(updates)
     });
   }
@@ -332,7 +332,7 @@ export class FollowUpBossService {
       });
     }
     
-    const endpoint = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return await this.makeApiRequest(userId, endpoint);
   }
   
@@ -340,8 +340,8 @@ export class FollowUpBossService {
    * Add a note to a contact
    */
   async addNote(userId: string, personId: string, note: string): Promise<any> {
-    return await this.makeApiRequest(userId, '/notes', {
-      method: 'POST',
+    return await this.makeApiRequest(userId, "/notes", {
+      method: "POST",
       body: JSON.stringify({
         personId,
         body: note
@@ -353,7 +353,7 @@ export class FollowUpBossService {
    * Get user info
    */
   async getUserInfo(userId: string): Promise<any> {
-    return await this.makeApiRequest(userId, '/me');
+    return await this.makeApiRequest(userId, "/me");
   }
 }
 

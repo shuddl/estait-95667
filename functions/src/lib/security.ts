@@ -7,7 +7,7 @@ const SALT_LENGTH = 64;
 const TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
-const secret = process.env.ENCRYPTION_KEY || process.env.FIREBASE_CONFIG?.encryption_key || "default-dev-key-replace-in-production";
+const secret = process.env.ENCRYPTION_KEY || (process.env.FIREBASE_CONFIG as any)?.encryption_key || "default-dev-key-replace-in-production";
 const salt = crypto.randomBytes(SALT_LENGTH);
 
 const getKey = (salt: crypto.BinaryLike): Buffer => {

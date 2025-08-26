@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import styles from './PropertyCard3D.module.css';
 
 interface PropertyCard3DProps {

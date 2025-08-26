@@ -3,8 +3,8 @@
  * Handles property searches and listing data from multiple MLS sources
  */
 
-import * as functions from 'firebase-functions/v1';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions/v1";
+import * as admin from "firebase-admin";
 
 export interface MLSProperty {
   id: string;
@@ -22,8 +22,8 @@ export interface MLSProperty {
   square_feet?: number;
   lot_size?: number;
   year_built?: number;
-  property_type: 'house' | 'condo' | 'townhouse' | 'land' | 'commercial' | 'multi-family';
-  listing_status: 'active' | 'pending' | 'sold' | 'withdrawn' | 'expired';
+  property_type: "house" | "condo" | "townhouse" | "land" | "commercial" | "multi-family";
+  listing_status: "active" | "pending" | "sold" | "withdrawn" | "expired";
   listing_date?: string;
   days_on_market?: number;
   description?: string;
@@ -89,8 +89,8 @@ export interface PropertySearchParams {
   price_reduced?: boolean;
   
   // Sorting and pagination
-  sort_by?: 'price' | 'newest' | 'beds' | 'baths' | 'sqft';
-  sort_order?: 'asc' | 'desc';
+  sort_by?: "price" | "newest" | "beds" | "baths" | "sqft";
+  sort_order?: "asc" | "desc";
   page?: number;
   limit?: number;
 }
@@ -125,14 +125,14 @@ export interface MarketStats {
 
 export class RealEstateMLSService {
   private readonly apiKey: string;
-  private readonly baseUrl = 'https://api.realestateapi.com/v2';
+  private readonly baseUrl = "https://api.realestateapi.com/v2";
   
   constructor() {
     this.apiKey = process.env.REALESTATEAPI_KEY || 
-                  functions.config().realestateapi?.key || '';
+                  functions.config().realestateapi?.key || "";
     
     if (!this.apiKey) {
-      console.warn('RealEstateAPI key is not configured. MLS searches will be limited.');
+      console.warn("RealEstateAPI key is not configured. MLS searches will be limited.");
     }
   }
   
@@ -142,61 +142,61 @@ export class RealEstateMLSService {
   async searchProperties(params: PropertySearchParams): Promise<PropertySearchResult> {
     if (!this.apiKey) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Estate API key is not configured.'
+        "failed-precondition",
+        "Real Estate API key is not configured."
       );
     }
     
     const url = new URL(`${this.baseUrl}/properties/search`);
     
     // Build query parameters
-    if (params.location) url.searchParams.append('location', params.location);
-    if (params.city) url.searchParams.append('city', params.city);
-    if (params.state) url.searchParams.append('state', params.state);
-    if (params.zip) url.searchParams.append('zip', params.zip);
-    if (params.radius) url.searchParams.append('radius', params.radius.toString());
+    if (params.location) url.searchParams.append("location", params.location);
+    if (params.city) url.searchParams.append("city", params.city);
+    if (params.state) url.searchParams.append("state", params.state);
+    if (params.zip) url.searchParams.append("zip", params.zip);
+    if (params.radius) url.searchParams.append("radius", params.radius.toString());
     
-    if (params.min_price) url.searchParams.append('price_min', params.min_price.toString());
-    if (params.max_price) url.searchParams.append('price_max', params.max_price.toString());
+    if (params.min_price) url.searchParams.append("price_min", params.min_price.toString());
+    if (params.max_price) url.searchParams.append("price_max", params.max_price.toString());
     
-    if (params.min_beds) url.searchParams.append('beds_min', params.min_beds.toString());
-    if (params.max_beds) url.searchParams.append('beds_max', params.max_beds.toString());
-    if (params.min_baths) url.searchParams.append('baths_min', params.min_baths.toString());
-    if (params.max_baths) url.searchParams.append('baths_max', params.max_baths.toString());
+    if (params.min_beds) url.searchParams.append("beds_min", params.min_beds.toString());
+    if (params.max_beds) url.searchParams.append("beds_max", params.max_beds.toString());
+    if (params.min_baths) url.searchParams.append("baths_min", params.min_baths.toString());
+    if (params.max_baths) url.searchParams.append("baths_max", params.max_baths.toString());
     
-    if (params.min_sqft) url.searchParams.append('sqft_min', params.min_sqft.toString());
-    if (params.max_sqft) url.searchParams.append('sqft_max', params.max_sqft.toString());
+    if (params.min_sqft) url.searchParams.append("sqft_min", params.min_sqft.toString());
+    if (params.max_sqft) url.searchParams.append("sqft_max", params.max_sqft.toString());
     
     if (params.property_type?.length) {
-      url.searchParams.append('property_type', params.property_type.join(','));
+      url.searchParams.append("property_type", params.property_type.join(","));
     }
     
     if (params.listing_status?.length) {
-      url.searchParams.append('listing_status', params.listing_status.join(','));
+      url.searchParams.append("listing_status", params.listing_status.join(","));
     }
     
     // Additional filters
-    if (params.has_pool !== undefined) url.searchParams.append('has_pool', params.has_pool.toString());
-    if (params.waterfront !== undefined) url.searchParams.append('waterfront', params.waterfront.toString());
-    if (params.new_construction !== undefined) url.searchParams.append('new_construction', params.new_construction.toString());
+    if (params.has_pool !== undefined) url.searchParams.append("has_pool", params.has_pool.toString());
+    if (params.waterfront !== undefined) url.searchParams.append("waterfront", params.waterfront.toString());
+    if (params.new_construction !== undefined) url.searchParams.append("new_construction", params.new_construction.toString());
     
     // Pagination
     const page = params.page || 1;
     const limit = Math.min(params.limit || 20, 100); // Max 100 per page
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('limit', limit.toString());
+    url.searchParams.append("page", page.toString());
+    url.searchParams.append("limit", limit.toString());
     
     // Sorting
     if (params.sort_by) {
-      const order = params.sort_order || 'desc';
-      url.searchParams.append('sort', `${params.sort_by}:${order}`);
+      const order = params.sort_order || "desc";
+      url.searchParams.append("sort", `${params.sort_by}:${order}`);
     }
     
     try {
       const response = await fetch(url.toString(), {
         headers: {
-          'x-api-key': this.apiKey,
-          'Accept': 'application/json'
+          "x-api-key": this.apiKey,
+          "Accept": "application/json"
         }
       });
       
@@ -211,16 +211,16 @@ export class RealEstateMLSService {
       return this.transformSearchResults(data, params, page, limit);
       
     } catch (error) {
-      console.error('Error searching properties:', error);
+      console.error("Error searching properties:", error);
       
       // Fallback to mock data for development
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
         return this.getMockSearchResults(params);
       }
       
       throw new functions.https.HttpsError(
-        'internal',
-        'Failed to search properties. Please try again.'
+        "internal",
+        "Failed to search properties. Please try again."
       );
     }
   }
@@ -231,16 +231,16 @@ export class RealEstateMLSService {
   async getPropertyDetails(propertyId: string): Promise<MLSProperty> {
     if (!this.apiKey) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Estate API key is not configured.'
+        "failed-precondition",
+        "Real Estate API key is not configured."
       );
     }
     
     try {
       const response = await fetch(`${this.baseUrl}/properties/${propertyId}`, {
         headers: {
-          'x-api-key': this.apiKey,
-          'Accept': 'application/json'
+          "x-api-key": this.apiKey,
+          "Accept": "application/json"
         }
       });
       
@@ -252,10 +252,10 @@ export class RealEstateMLSService {
       return this.transformProperty(data);
       
     } catch (error) {
-      console.error('Error getting property details:', error);
+      console.error("Error getting property details:", error);
       throw new functions.https.HttpsError(
-        'internal',
-        'Failed to get property details.'
+        "internal",
+        "Failed to get property details."
       );
     }
   }
@@ -266,8 +266,8 @@ export class RealEstateMLSService {
   async getComparables(propertyId: string, radius: number = 1): Promise<MLSProperty[]> {
     if (!this.apiKey) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Estate API key is not configured.'
+        "failed-precondition",
+        "Real Estate API key is not configured."
       );
     }
     
@@ -285,7 +285,7 @@ export class RealEstateMLSService {
         min_price: property.price * 0.8,
         max_price: property.price * 1.2,
         property_type: [property.property_type],
-        listing_status: ['sold'],
+        listing_status: ["sold"],
         limit: 10
       };
       
@@ -298,10 +298,10 @@ export class RealEstateMLSService {
       return results.properties.filter(p => p.id !== propertyId);
       
     } catch (error) {
-      console.error('Error getting comparables:', error);
+      console.error("Error getting comparables:", error);
       throw new functions.https.HttpsError(
-        'internal',
-        'Failed to get comparable properties.'
+        "internal",
+        "Failed to get comparable properties."
       );
     }
   }
@@ -309,7 +309,7 @@ export class RealEstateMLSService {
   /**
    * Get market statistics for a location
    */
-  async getMarketStats(location: string, period: 'month' | 'quarter' | 'year' = 'month'): Promise<MarketStats> {
+  async getMarketStats(location: string, period: "month" | "quarter" | "year" = "month"): Promise<MarketStats> {
     if (!this.apiKey) {
       // Return mock data if API key not configured
       return this.getMockMarketStats(location, period);
@@ -318,10 +318,10 @@ export class RealEstateMLSService {
     try {
       const response = await fetch(`${this.baseUrl}/market/stats`, {
         headers: {
-          'x-api-key': this.apiKey,
-          'Accept': 'application/json'
+          "x-api-key": this.apiKey,
+          "Accept": "application/json"
         },
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ location, period })
       });
       
@@ -332,7 +332,7 @@ export class RealEstateMLSService {
       return await response.json();
       
     } catch (error) {
-      console.error('Error getting market stats:', error);
+      console.error("Error getting market stats:", error);
       return this.getMockMarketStats(location, period);
     }
   }
@@ -349,16 +349,16 @@ export class RealEstateMLSService {
   }> {
     if (!this.apiKey) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Estate API key is not configured.'
+        "failed-precondition",
+        "Real Estate API key is not configured."
       );
     }
     
     try {
       const response = await fetch(`${this.baseUrl}/properties/${propertyId}/estimate`, {
         headers: {
-          'x-api-key': this.apiKey,
-          'Accept': 'application/json'
+          "x-api-key": this.apiKey,
+          "Accept": "application/json"
         }
       });
       
@@ -369,10 +369,10 @@ export class RealEstateMLSService {
       return await response.json();
       
     } catch (error) {
-      console.error('Error getting property estimate:', error);
+      console.error("Error getting property estimate:", error);
       throw new functions.https.HttpsError(
-        'internal',
-        'Failed to get property value estimate.'
+        "internal",
+        "Failed to get property value estimate."
       );
     }
   }
@@ -405,13 +405,13 @@ export class RealEstateMLSService {
    */
   private transformProperty(apiProperty: any): MLSProperty {
     return {
-      id: apiProperty.id || apiProperty.listing_id || '',
+      id: apiProperty.id || apiProperty.listing_id || "",
       mls_number: apiProperty.mls_number || apiProperty.mls_id,
       address: {
-        street: apiProperty.address || apiProperty.street_address || '',
-        city: apiProperty.city || '',
-        state: apiProperty.state || '',
-        zip: apiProperty.zip || apiProperty.postal_code || '',
+        street: apiProperty.address || apiProperty.street_address || "",
+        city: apiProperty.city || "",
+        state: apiProperty.state || "",
+        zip: apiProperty.zip || apiProperty.postal_code || "",
         county: apiProperty.county
       },
       price: apiProperty.price || apiProperty.list_price || 0,
@@ -429,7 +429,7 @@ export class RealEstateMLSService {
       images: apiProperty.images || apiProperty.photos || [],
       virtual_tour_url: apiProperty.virtual_tour_url,
       agent: apiProperty.agent ? {
-        name: apiProperty.agent.name || '',
+        name: apiProperty.agent.name || "",
         phone: apiProperty.agent.phone,
         email: apiProperty.agent.email,
         brokerage: apiProperty.agent.brokerage
@@ -448,30 +448,30 @@ export class RealEstateMLSService {
   /**
    * Normalize property type to our enum
    */
-  private normalizePropertyType(type: string): MLSProperty['property_type'] {
-    const normalized = type?.toLowerCase() || '';
+  private normalizePropertyType(type: string): MLSProperty["property_type"] {
+    const normalized = type?.toLowerCase() || "";
     
-    if (normalized.includes('condo')) return 'condo';
-    if (normalized.includes('town')) return 'townhouse';
-    if (normalized.includes('land') || normalized.includes('lot')) return 'land';
-    if (normalized.includes('commercial')) return 'commercial';
-    if (normalized.includes('multi') || normalized.includes('plex')) return 'multi-family';
+    if (normalized.includes("condo")) return "condo";
+    if (normalized.includes("town")) return "townhouse";
+    if (normalized.includes("land") || normalized.includes("lot")) return "land";
+    if (normalized.includes("commercial")) return "commercial";
+    if (normalized.includes("multi") || normalized.includes("plex")) return "multi-family";
     
-    return 'house';
+    return "house";
   }
   
   /**
    * Normalize listing status to our enum
    */
-  private normalizeListingStatus(status: string): MLSProperty['listing_status'] {
-    const normalized = status?.toLowerCase() || '';
+  private normalizeListingStatus(status: string): MLSProperty["listing_status"] {
+    const normalized = status?.toLowerCase() || "";
     
-    if (normalized.includes('pending')) return 'pending';
-    if (normalized.includes('sold') || normalized.includes('closed')) return 'sold';
-    if (normalized.includes('withdrawn') || normalized.includes('cancelled')) return 'withdrawn';
-    if (normalized.includes('expired')) return 'expired';
+    if (normalized.includes("pending")) return "pending";
+    if (normalized.includes("sold") || normalized.includes("closed")) return "sold";
+    if (normalized.includes("withdrawn") || normalized.includes("cancelled")) return "withdrawn";
+    if (normalized.includes("expired")) return "expired";
     
-    return 'active';
+    return "active";
   }
   
   /**
@@ -480,44 +480,44 @@ export class RealEstateMLSService {
   private getMockSearchResults(params: PropertySearchParams): PropertySearchResult {
     const mockProperties: MLSProperty[] = [
       {
-        id: 'mock-1',
-        mls_number: 'MLS123456',
+        id: "mock-1",
+        mls_number: "MLS123456",
         address: {
-          street: '123 Main St',
-          city: params.city || 'Austin',
-          state: params.state || 'TX',
-          zip: '78701'
+          street: "123 Main St",
+          city: params.city || "Austin",
+          state: params.state || "TX",
+          zip: "78701"
         },
         price: params.min_price || 450000,
         bedrooms: params.min_beds || 3,
         bathrooms: 2,
         square_feet: 2200,
-        property_type: 'house',
-        listing_status: 'active',
+        property_type: "house",
+        listing_status: "active",
         listing_date: new Date().toISOString(),
         days_on_market: 5,
-        description: 'Beautiful home in great location',
-        images: ['https://via.placeholder.com/800x600']
+        description: "Beautiful home in great location",
+        images: ["https://via.placeholder.com/800x600"]
       },
       {
-        id: 'mock-2',
-        mls_number: 'MLS123457',
+        id: "mock-2",
+        mls_number: "MLS123457",
         address: {
-          street: '456 Oak Ave',
-          city: params.city || 'Austin',
-          state: params.state || 'TX',
-          zip: '78702'
+          street: "456 Oak Ave",
+          city: params.city || "Austin",
+          state: params.state || "TX",
+          zip: "78702"
         },
         price: (params.min_price || 400000) + 50000,
         bedrooms: (params.min_beds || 3) + 1,
         bathrooms: 2.5,
         square_feet: 2500,
-        property_type: 'house',
-        listing_status: 'active',
+        property_type: "house",
+        listing_status: "active",
         listing_date: new Date().toISOString(),
         days_on_market: 10,
-        description: 'Spacious family home with modern updates',
-        images: ['https://via.placeholder.com/800x600']
+        description: "Spacious family home with modern updates",
+        images: ["https://via.placeholder.com/800x600"]
       }
     ];
     
@@ -553,9 +553,9 @@ export class RealEstateMLSService {
    */
   async savePropertySearch(userId: string, params: PropertySearchParams, results: PropertySearchResult): Promise<void> {
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('searches')
+      .collection("searches")
       .add({
         params,
         results_count: results.total_count,
@@ -564,7 +564,7 @@ export class RealEstateMLSService {
     
     // Update user's last search
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         lastPropertySearch: params.location || `${params.city}, ${params.state}`,
@@ -577,10 +577,10 @@ export class RealEstateMLSService {
    */
   async getSavedSearches(userId: string, limit: number = 10): Promise<any[]> {
     const snapshot = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('searches')
-      .orderBy('timestamp', 'desc')
+      .collection("searches")
+      .orderBy("timestamp", "desc")
       .limit(limit)
       .get();
     

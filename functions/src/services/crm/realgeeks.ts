@@ -3,9 +3,9 @@
  * Handles OAuth flow and API interactions for Real Geeks
  */
 
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions/v1';
-import { encrypt, decrypt } from '../../lib/security';
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions/v1";
+import { encrypt, decrypt } from "../../lib/security";
 
 export interface RealGeeksTokenResponse {
   access_token: string;
@@ -22,7 +22,7 @@ export interface RealGeeksLead {
   email?: string;
   phone?: string;
   source?: string;
-  status?: 'New' | 'Contacted' | 'Qualified' | 'Unqualified' | 'Lost';
+  status?: "New" | "Contacted" | "Qualified" | "Unqualified" | "Lost";
   tags?: string[];
   notes?: string;
   property_types?: string[];
@@ -37,7 +37,7 @@ export interface RealGeeksLead {
 export interface RealGeeksActivity {
   id?: string;
   lead_id: string;
-  type: 'note' | 'email' | 'call' | 'text' | 'showing' | 'meeting';
+  type: "note" | "email" | "call" | "text" | "showing" | "meeting";
   description: string;
   created_at?: string;
   due_date?: string;
@@ -58,13 +58,13 @@ export interface RealGeeksProperty {
   lot_size?: number;
   year_built?: number;
   property_type: string;
-  status: 'Active' | 'Pending' | 'Sold' | 'Withdrawn';
+  status: "Active" | "Pending" | "Sold" | "Withdrawn";
   listing_date?: string;
   images?: string[];
 }
 
 export class RealGeeksService {
-  private readonly baseUrl = 'https://api.realgeeks.com/v2';
+  private readonly baseUrl = "https://api.realgeeks.com/v2";
   
   /**
    * Get OAuth authorization URL
@@ -75,17 +75,17 @@ export class RealGeeksService {
     
     if (!clientId) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Geeks client ID is not configured.'
+        "failed-precondition",
+        "Real Geeks client ID is not configured."
       );
     }
     
     const params = new URLSearchParams({
-      response_type: 'code',
+      response_type: "code",
       client_id: clientId,
       redirect_uri: redirectUri,
       state: userId,
-      scope: 'leads:read leads:write properties:read activities:write'
+      scope: "leads:read leads:write properties:read activities:write"
     });
     
     return `https://app.realgeeks.com/oauth/authorize?${params.toString()}`;
@@ -101,17 +101,17 @@ export class RealGeeksService {
                         functions.config().realgeeks?.client_secret;
     
     if (!clientId || !clientSecret) {
-      throw new Error('Real Geeks credentials are not configured.');
+      throw new Error("Real Geeks credentials are not configured.");
     }
     
-    const response = await fetch('https://app.realgeeks.com/oauth/token', {
-      method: 'POST',
+    const response = await fetch("https://app.realgeeks.com/oauth/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
       },
       body: new URLSearchParams({
-        grant_type: 'authorization_code',
+        grant_type: "authorization_code",
         code,
         client_id: clientId,
         client_secret: clientSecret,
@@ -137,17 +137,17 @@ export class RealGeeksService {
                         functions.config().realgeeks?.client_secret;
     
     if (!clientId || !clientSecret) {
-      throw new Error('Real Geeks credentials are not configured.');
+      throw new Error("Real Geeks credentials are not configured.");
     }
     
-    const response = await fetch('https://app.realgeeks.com/oauth/token', {
-      method: 'POST',
+    const response = await fetch("https://app.realgeeks.com/oauth/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
       },
       body: new URLSearchParams({
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         refresh_token: refreshToken,
         client_id: clientId,
         client_secret: clientSecret
@@ -169,10 +169,10 @@ export class RealGeeksService {
     const expiresAt = Date.now() + (tokens.expires_in * 1000);
     
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('credentials')
-      .doc('real_geeks')
+      .collection("credentials")
+      .doc("real_geeks")
       .set({
         accessToken: encrypt(tokens.access_token),
         refreshToken: encrypt(tokens.refresh_token),
@@ -183,11 +183,11 @@ export class RealGeeksService {
       });
     
     await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
       .update({
         crmConnected: true,
-        crmType: 'real_geeks',
+        crmType: "real_geeks",
         crmConnectedAt: admin.firestore.FieldValue.serverTimestamp()
       });
   }
@@ -197,24 +197,24 @@ export class RealGeeksService {
    */
   async getValidAccessToken(userId: string): Promise<string> {
     const tokenDoc = await admin.firestore()
-      .collection('users')
+      .collection("users")
       .doc(userId)
-      .collection('credentials')
-      .doc('real_geeks')
+      .collection("credentials")
+      .doc("real_geeks")
       .get();
     
     if (!tokenDoc.exists || !tokenDoc.data()) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Real Geeks is not connected for this user.'
+        "failed-precondition",
+        "Real Geeks is not connected for this user."
       );
     }
     
     const data = tokenDoc.data();
     if (!data?.accessToken || !data?.refreshToken) {
       throw new functions.https.HttpsError(
-        'failed-precondition',
-        'No tokens found for Real Geeks.'
+        "failed-precondition",
+        "No tokens found for Real Geeks."
       );
     }
     
@@ -231,10 +231,10 @@ export class RealGeeksService {
         await this.storeTokens(userId, newTokens);
         return newTokens.access_token;
       } catch (error) {
-        console.error('Failed to refresh Real Geeks token:', error);
+        console.error("Failed to refresh Real Geeks token:", error);
         throw new functions.https.HttpsError(
-          'unauthenticated',
-          'Failed to refresh Real Geeks authentication. Please reconnect your account.'
+          "unauthenticated",
+          "Failed to refresh Real Geeks authentication. Please reconnect your account."
         );
       }
     }
@@ -255,9 +255,9 @@ export class RealGeeksService {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
         ...options.headers
       }
     });
@@ -274,8 +274,8 @@ export class RealGeeksService {
    * Add a new lead
    */
   async addLead(userId: string, lead: RealGeeksLead): Promise<any> {
-    return await this.makeApiRequest(userId, '/leads', {
-      method: 'POST',
+    return await this.makeApiRequest(userId, "/leads", {
+      method: "POST",
       body: JSON.stringify(lead)
     });
   }
@@ -285,7 +285,7 @@ export class RealGeeksService {
    */
   async updateLead(userId: string, leadId: string, updates: Partial<RealGeeksLead>): Promise<any> {
     return await this.makeApiRequest(userId, `/leads/${leadId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates)
     });
   }
@@ -312,7 +312,7 @@ export class RealGeeksService {
       });
     }
     
-    const endpoint = `/leads${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/leads${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return await this.makeApiRequest(userId, endpoint);
   }
   
@@ -334,8 +334,8 @@ export class RealGeeksService {
    * Add an activity
    */
   async addActivity(userId: string, activity: RealGeeksActivity): Promise<any> {
-    return await this.makeApiRequest(userId, '/activities', {
-      method: 'POST',
+    return await this.makeApiRequest(userId, "/activities", {
+      method: "POST",
       body: JSON.stringify(activity)
     });
   }
@@ -345,7 +345,7 @@ export class RealGeeksService {
    */
   async updateActivity(userId: string, activityId: string, updates: Partial<RealGeeksActivity>): Promise<any> {
     return await this.makeApiRequest(userId, `/activities/${activityId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates)
     });
   }
@@ -369,7 +369,7 @@ export class RealGeeksService {
       });
     }
     
-    const endpoint = `/activities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/activities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return await this.makeApiRequest(userId, endpoint);
   }
   
@@ -413,7 +413,7 @@ export class RealGeeksService {
    */
   async addTagToLead(userId: string, leadId: string, tag: string): Promise<any> {
     return await this.makeApiRequest(userId, `/leads/${leadId}/tags`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ tag })
     });
   }
@@ -423,7 +423,7 @@ export class RealGeeksService {
    */
   async removeTagFromLead(userId: string, leadId: string, tag: string): Promise<any> {
     return await this.makeApiRequest(userId, `/leads/${leadId}/tags/${tag}`, {
-      method: 'DELETE'
+      method: "DELETE"
     });
   }
   
@@ -431,15 +431,15 @@ export class RealGeeksService {
    * Get lead statistics
    */
   async getLeadStats(userId: string): Promise<any> {
-    return await this.makeApiRequest(userId, '/leads/stats');
+    return await this.makeApiRequest(userId, "/leads/stats");
   }
   
   /**
    * Bulk update leads
    */
   async bulkUpdateLeads(userId: string, leadIds: string[], updates: Partial<RealGeeksLead>): Promise<any> {
-    return await this.makeApiRequest(userId, '/leads/bulk', {
-      method: 'PATCH',
+    return await this.makeApiRequest(userId, "/leads/bulk", {
+      method: "PATCH",
       body: JSON.stringify({
         lead_ids: leadIds,
         updates

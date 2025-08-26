@@ -2,20 +2,20 @@
  * Type definitions for Firebase Functions
  */
 
-import { CallableContext } from 'firebase-functions/v1/https';
+import { CallableContext } from "firebase-functions/v1/https";
 
 // ============================================================================
 // AI TYPES
 // ============================================================================
 
 export interface AIResponse {
-  action: 'add_lead' | 'create_task' | 'search_properties' | 'unknown';
+  action: "add_lead" | "create_task" | "search_properties" | "unknown";
   parameters: Record<string, any>;
   responseToUser: string;
 }
 
 export interface VertexAIContent {
-  role: 'user' | 'model';
+  role: "user" | "model";
   parts: Array<{ text: string }>;
 }
 
@@ -43,7 +43,7 @@ export interface VertexAIResponse {
 // CRM TYPES
 // ============================================================================
 
-export type CRMType = 'wise_agent' | 'follow_up_boss' | 'real_geeks';
+export type CRMType = "wise_agent" | "follow_up_boss" | "real_geeks";
 
 export interface WiseAgentContact {
   firstName: string;
@@ -128,4 +128,4 @@ export function isAuthenticated(context: CallableContext): context is Authentica
 }
 
 // Re-export Express types for convenience
-export type { Request, Response } from 'express';
+export type { Request, Response } from "express";
