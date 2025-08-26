@@ -3,6 +3,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AnimatedLogo from '../../components/AnimatedLogo';
+import { functions } from '@/lib/firebase/firebase';
+import { httpsCallable } from 'firebase/functions';
 
 interface Property {
   id: string;
@@ -78,36 +80,90 @@ function SearchResultsContent() {
   const query = searchParams.get('q') || '';
 
   useEffect(() => {
-    // Simulate fetching properties based on search
-    setTimeout(() => {
-      const mockProperties: Property[] = [
-        { id: '1', address: '1234 Sunset Boulevard, Austin TX', price: 850000, beds: 4, baths: 3, sqft: 3200, status: 'new', propertyType: 'Single Family' },
-        { id: '2', address: '567 Riverside Drive, Austin TX', price: 720000, beds: 3, baths: 2.5, sqft: 2800, propertyType: 'Single Family' },
-        { id: '3', address: '890 Hilltop Avenue, Austin TX', price: 950000, beds: 5, baths: 4, sqft: 3800, propertyType: 'Single Family' },
-        { id: '4', address: '321 Downtown Loft, Austin TX', price: 480000, beds: 2, baths: 2, sqft: 1800, status: 'new', propertyType: 'Condo' },
-        { id: '5', address: '456 Oak Street, Austin TX', price: 625000, beds: 3, baths: 2, sqft: 2400, propertyType: 'Townhouse' },
-        { id: '6', address: '789 Pine Lane, Austin TX', price: 1200000, beds: 6, baths: 5, sqft: 4500, propertyType: 'Single Family' },
-        { id: '7', address: '101 Main Street #4B, Austin TX', price: 350000, beds: 1, baths: 1, sqft: 900, propertyType: 'Condo' },
-        { id: '8', address: '202 Park Avenue, Austin TX', price: 575000, beds: 3, baths: 2, sqft: 2100, propertyType: 'Townhouse' },
-      ];
-      
-      // Apply filters
-      let filtered = [...mockProperties];
-      if (filters.minPrice) filtered = filtered.filter(p => p.price >= filters.minPrice!);
-      if (filters.maxPrice) filtered = filtered.filter(p => p.price <= filters.maxPrice!);
-      if (filters.minBeds) filtered = filtered.filter(p => p.beds >= filters.minBeds!);
-      if (filters.propertyType) filtered = filtered.filter(p => p.propertyType === filters.propertyType);
-      
-      // Apply sorting
-      if (filters.sortBy === 'price') {
-        filtered.sort((a, b) => a.price - b.price);
-      } else if (filters.sortBy === 'sqft') {
-        filtered.sort((a, b) => b.sqft - a.sqft);
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        
+        // Build search command based on query and filters
+        let searchCommand = query || 'Show all available properties';
+        
+        // Add filter details to command
+        const filterParts = [];
+        if (filters.minPrice) filterParts.push(`minimum price $${filters.minPrice.toLocaleString()}`);
+        if (filters.maxPrice) filterParts.push(`maximum price $${filters.maxPrice.toLocaleString()}`);
+        if (filters.minBeds) filterParts.push(`at least ${filters.minBeds} bedrooms`);
+        if (filters.propertyType) filterParts.push(`property type: ${filters.propertyType}`);
+        
+        if (filterParts.length > 0) {
+          searchCommand += ` with ${filterParts.join(', ')}`;
+        }
+        
+        if (filters.sortBy === 'price') {
+          searchCommand += ' sorted by price low to high';
+        } else if (filters.sortBy === 'sqft') {
+          searchCommand += ' sorted by square footage';
+        }
+        
+        // Call Firebase function to search properties
+        const processAgentCommand = httpsCallable(functions, 'processAgentCommand');
+        const result = await processAgentCommand({ 
+          command: searchCommand,
+          context: {
+            source: 'property_search',
+            filters: filters
+          }
+        });
+        
+        // Handle the response
+        const response = result.data as any;
+        
+        if (response.success && response.data?.properties) {
+          // Map the properties to our format
+          const mappedProperties = response.data.properties.map((p: any, index: number) => ({
+            id: p.id || `prop-${index}`,
+            address: p.address || p.location || 'Address not available',
+            price: p.price || 0,
+            beds: p.bedrooms || p.beds || 0,
+            baths: p.bathrooms || p.baths || 0,
+            sqft: p.squareFootage || p.sqft || 0,
+            status: p.status,
+            propertyType: p.type || p.propertyType || 'Residential',
+            daysOnMarket: p.daysOnMarket,
+            image: p.imageUrl || p.image
+          }));
+          
+          setProperties(mappedProperties);
+        } else if (response.action === 'searchProperties' || response.action === 'search_properties') {
+          // Handle alternate response format
+          const searchData = response.data || {};
+          if (Array.isArray(searchData)) {
+            const mappedProperties = searchData.map((p: any, index: number) => ({
+              id: p.id || `prop-${index}`,
+              address: p.address || 'Address not available',
+              price: p.price || 0,
+              beds: p.bedrooms || p.beds || 0,
+              baths: p.bathrooms || p.baths || 0,
+              sqft: p.squareFootage || p.sqft || 0,
+              status: p.status,
+              propertyType: p.type || 'Residential'
+            }));
+            setProperties(mappedProperties);
+          } else {
+            setProperties([]);
+          }
+        } else {
+          // No properties found
+          setProperties([]);
+        }
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+        setProperties([]);
+      } finally {
+        setLoading(false);
       }
-      
-      setProperties(filtered);
-      setLoading(false);
-    }, 1000);
+    };
+    
+    fetchProperties();
   }, [query, filters]);
 
   const handleFilterChange = (newFilters: FilterOptions) => {

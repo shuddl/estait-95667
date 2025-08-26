@@ -1,5 +1,8 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
+import Link from "next/link";
+import { functions } from "@/lib/firebase/firebase";
+import { httpsCallable } from "firebase/functions";
 import type { SpeechRecognition, SpeechRecognitionEvent } from "@/types/speech";
 
 export default function Landing() {
@@ -53,16 +56,13 @@ export default function Landing() {
     setMessages(m => [...m, `you: ${text}`, "ai: Processing..."]);
     setInput("");
 
-    // Process with AI
+    // Process with AI using Firebase Functions
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-central1-estait-1fdbe.cloudfunctions.net'}/processAgentCommand`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commandText: text })
-      });
+      const processAgentCommand = httpsCallable(functions, 'processAgentCommand');
+      const result = await processAgentCommand({ command: text });
+      const data = result.data as any;
       
-      const data = await response.json();
-      setMessages(m => [...m.slice(0, -1), `ai: ${data.responseToUser || "I understand. Let me process that for you."}`]);
+      setMessages(m => [...m.slice(0, -1), `ai: ${data.response || data.responseToUser || "I understand. Let me process that for you."}`]);
     } catch (error) {
       console.error("Error calling API:", error);
       setMessages(m => [...m.slice(0, -1), "ai: System processing. Please try again."]);
@@ -77,11 +77,11 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="nav-nexus">
         <div className="nav-container">
-          <a href="/" className="logo-nexus">ESTAIT</a>
+          <Link href="/" className="logo-nexus">ESTAIT</Link>
           <div className="flex gap-4">
-            <a href="/login" className="btn-nexus btn-nexus-text">
+            <Link href="/login" className="btn-nexus btn-nexus-text">
               Access Portal
-            </a>
+            </Link>
           </div>
         </div>
       </nav>

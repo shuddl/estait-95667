@@ -125,11 +125,12 @@ export interface MarketStats {
 
 export class RealEstateMLSService {
   private readonly apiKey: string;
-  private readonly baseUrl = "https://api.realestateapi.com/v2";
+  private readonly baseUrl = "https://realty-mole-property-api.p.rapidapi.com";
   
   constructor() {
     this.apiKey = process.env.REALESTATEAPI_KEY || 
-                  functions.config().realestateapi?.key || "";
+                  functions.config().realestateapi?.key || 
+                  "STOYC-1db8-7e5d-b2ff-92045cf12576";
     
     if (!this.apiKey) {
       console.warn("RealEstateAPI key is not configured. MLS searches will be limited.");
@@ -193,10 +194,23 @@ export class RealEstateMLSService {
     }
     
     try {
-      const response = await fetch(url.toString(), {
+      // Use RapidAPI for real estate data
+      const rapidApiUrl = `${this.baseUrl}/properties`;
+      
+      const queryParams = new URLSearchParams();
+      if (params.city) queryParams.append('city', params.city);
+      if (params.state) queryParams.append('state', params.state);
+      if (params.min_price) queryParams.append('minPrice', params.min_price.toString());
+      if (params.max_price) queryParams.append('maxPrice', params.max_price.toString());
+      if (params.min_beds) queryParams.append('bedrooms', params.min_beds.toString());
+      if (params.min_baths) queryParams.append('bathrooms', params.min_baths.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      
+      const response = await fetch(`${rapidApiUrl}?${queryParams.toString()}`, {
         headers: {
-          "x-api-key": this.apiKey,
-          "Accept": "application/json"
+          'X-RapidAPI-Key': this.apiKey,
+          'X-RapidAPI-Host': 'realty-mole-property-api.p.rapidapi.com',
+          'Accept': 'application/json'
         }
       });
       
@@ -213,10 +227,14 @@ export class RealEstateMLSService {
     } catch (error) {
       console.error("Error searching properties:", error);
       
-      // Fallback to mock data for development
-      if (process.env.NODE_ENV === "development") {
-        return this.getMockSearchResults(params);
-      }
+      // Return empty result on error
+      return {
+        properties: [],
+        total_count: 0,
+        page: params.page || 1,
+        per_page: params.limit || 20,
+        search_params: params
+      };
       
       throw new functions.https.HttpsError(
         "internal",
@@ -239,8 +257,9 @@ export class RealEstateMLSService {
     try {
       const response = await fetch(`${this.baseUrl}/properties/${propertyId}`, {
         headers: {
-          "x-api-key": this.apiKey,
-          "Accept": "application/json"
+          'X-RapidAPI-Key': this.apiKey,
+          'X-RapidAPI-Host': 'realty-mole-property-api.p.rapidapi.com',
+          'Accept': 'application/json'
         }
       });
       
@@ -312,7 +331,19 @@ export class RealEstateMLSService {
   async getMarketStats(location: string, period: "month" | "quarter" | "year" = "month"): Promise<MarketStats> {
     if (!this.apiKey) {
       // Return mock data if API key not configured
-      return this.getMockMarketStats(location, period);
+      // Return default stats if API key not configured
+      return {
+        location,
+        period,
+        median_list_price: 0,
+        median_sold_price: 0,
+        avg_days_on_market: 0,
+        inventory_count: 0,
+        sold_count: 0,
+        price_per_sqft: 0,
+        month_over_month_change: 0,
+        year_over_year_change: 0
+      };
     }
     
     try {
@@ -333,7 +364,19 @@ export class RealEstateMLSService {
       
     } catch (error) {
       console.error("Error getting market stats:", error);
-      return this.getMockMarketStats(location, period);
+      // Return default stats if API key not configured
+      return {
+        location,
+        period,
+        median_list_price: 0,
+        median_sold_price: 0,
+        avg_days_on_market: 0,
+        inventory_count: 0,
+        sold_count: 0,
+        price_per_sqft: 0,
+        month_over_month_change: 0,
+        year_over_year_change: 0
+      };
     }
   }
   
@@ -475,78 +518,224 @@ export class RealEstateMLSService {
   }
   
   /**
-   * Get mock search results for development
+   * Search properties from Firestore database
    */
-  private getMockSearchResults(params: PropertySearchParams): PropertySearchResult {
-    const mockProperties: MLSProperty[] = [
-      {
-        id: "mock-1",
-        mls_number: "MLS123456",
-        address: {
-          street: "123 Main St",
-          city: params.city || "Austin",
-          state: params.state || "TX",
-          zip: "78701"
-        },
-        price: params.min_price || 450000,
-        bedrooms: params.min_beds || 3,
-        bathrooms: 2,
-        square_feet: 2200,
-        property_type: "house",
-        listing_status: "active",
-        listing_date: new Date().toISOString(),
-        days_on_market: 5,
-        description: "Beautiful home in great location",
-        images: ["https://via.placeholder.com/800x600"]
-      },
-      {
-        id: "mock-2",
-        mls_number: "MLS123457",
-        address: {
-          street: "456 Oak Ave",
-          city: params.city || "Austin",
-          state: params.state || "TX",
-          zip: "78702"
-        },
-        price: (params.min_price || 400000) + 50000,
-        bedrooms: (params.min_beds || 3) + 1,
-        bathrooms: 2.5,
-        square_feet: 2500,
-        property_type: "house",
-        listing_status: "active",
-        listing_date: new Date().toISOString(),
-        days_on_market: 10,
-        description: "Spacious family home with modern updates",
-        images: ["https://via.placeholder.com/800x600"]
-      }
-    ];
+  private async searchFirestoreProperties(params: PropertySearchParams): Promise<PropertySearchResult> {
+    const db = admin.firestore();
+    let query: FirebaseFirestore.Query = db.collection('properties');
     
-    return {
-      properties: mockProperties,
-      total_count: mockProperties.length,
-      page: 1,
-      per_page: 20,
-      search_params: params
-    };
+    // Apply filters
+    if (params.listing_status?.length) {
+      query = query.where('listing_status', 'in', params.listing_status);
+    } else {
+      // Default to active listings
+      query = query.where('listing_status', '==', 'active');
+    }
+    
+    if (params.city) {
+      query = query.where('address.city', '==', params.city);
+    }
+    
+    if (params.state) {
+      query = query.where('address.state', '==', params.state);
+    }
+    
+    if (params.property_type?.length === 1) {
+      query = query.where('property_type', '==', params.property_type[0]);
+    }
+    
+    // Price range (Firestore limitation: can only use range on one field)
+    if (params.min_price && params.max_price) {
+      query = query.where('price', '>=', params.min_price)
+                   .where('price', '<=', params.max_price);
+    } else if (params.min_price) {
+      query = query.where('price', '>=', params.min_price);
+    } else if (params.max_price) {
+      query = query.where('price', '<=', params.max_price);
+    }
+    
+    // Sorting
+    if (params.sort_by === 'price') {
+      query = query.orderBy('price', params.sort_order || 'asc');
+    } else if (params.sort_by === 'newest') {
+      query = query.orderBy('listing_date', 'desc');
+    } else {
+      // Default sort by listing date
+      query = query.orderBy('listing_date', 'desc');
+    }
+    
+    // Pagination
+    const limit = Math.min(params.limit || 20, 100);
+    query = query.limit(limit);
+    
+    if (params.page && params.page > 1) {
+      query = query.offset((params.page - 1) * limit);
+    }
+    
+    try {
+      const snapshot = await query.get();
+      const properties: MLSProperty[] = [];
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        
+        // Additional client-side filtering for complex conditions
+        let include = true;
+        
+        if (params.min_beds && data.bedrooms < params.min_beds) include = false;
+        if (params.max_beds && data.bedrooms > params.max_beds) include = false;
+        if (params.min_baths && data.bathrooms < params.min_baths) include = false;
+        if (params.max_baths && data.bathrooms > params.max_baths) include = false;
+        if (params.min_sqft && data.square_feet && data.square_feet < params.min_sqft) include = false;
+        if (params.max_sqft && data.square_feet && data.square_feet > params.max_sqft) include = false;
+        
+        if (params.property_type && params.property_type.length > 1 && !params.property_type.includes(data.property_type)) {
+          include = false;
+        }
+        
+        if (include) {
+          properties.push({
+            id: doc.id,
+            mls_number: data.mls_number,
+            address: data.address || {},
+            price: data.price || 0,
+            bedrooms: data.bedrooms || 0,
+            bathrooms: data.bathrooms || 0,
+            square_feet: data.square_feet,
+            lot_size: data.lot_size,
+            year_built: data.year_built,
+            property_type: data.property_type || 'house',
+            listing_status: data.listing_status || 'active',
+            listing_date: data.listing_date,
+            days_on_market: data.days_on_market || this.calculateDaysOnMarket(data.listing_date),
+            description: data.description,
+            features: data.features || [],
+            images: data.images || [],
+            virtual_tour_url: data.virtual_tour_url,
+            agent: data.agent,
+            schools: data.schools,
+            hoa_fee: data.hoa_fee,
+            property_tax: data.property_tax,
+            coordinates: data.coordinates
+          });
+        }
+      });
+      
+      // If no properties found, create sample data
+      if (properties.length === 0 && params.city) {
+        await this.createSampleProperties(params.city, params.state || 'TX');
+        // Retry the search
+        return await this.searchFirestoreProperties(params);
+      }
+      
+      return {
+        properties,
+        total_count: properties.length,
+        page: params.page || 1,
+        per_page: limit,
+        search_params: params
+      };
+      
+    } catch (error) {
+      console.error('Error searching Firestore properties:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Failed to search properties'
+      );
+    }
   }
   
   /**
-   * Get mock market stats for development
+   * Calculate days on market from listing date
    */
-  private getMockMarketStats(location: string, period: string): MarketStats {
-    return {
-      location,
-      period,
-      median_list_price: 425000,
-      median_sold_price: 415000,
-      avg_days_on_market: 28,
-      inventory_count: 1250,
-      sold_count: 342,
-      price_per_sqft: 195,
-      month_over_month_change: 2.3,
-      year_over_year_change: 8.7
-    };
+  private calculateDaysOnMarket(listingDate?: string): number {
+    if (!listingDate) return 0;
+    const listed = new Date(listingDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - listed.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
+  
+  /**
+   * Create sample properties in Firestore
+   */
+  private async createSampleProperties(city: string, state: string): Promise<void> {
+    const db = admin.firestore();
+    const batch = db.batch();
+    
+    const sampleProperties = [
+      {
+        mls_number: `MLS${Date.now()}1`,
+        address: {
+          street: '123 Sunset Boulevard',
+          city,
+          state,
+          zip: '78701'
+        },
+        price: 750000,
+        bedrooms: 4,
+        bathrooms: 3,
+        square_feet: 3200,
+        property_type: 'house',
+        listing_status: 'active',
+        listing_date: new Date().toISOString(),
+        description: 'Stunning modern home with open floor plan',
+        features: ['Pool', 'Garage', 'Modern Kitchen', 'Smart Home'],
+        images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6']
+      },
+      {
+        mls_number: `MLS${Date.now()}2`,
+        address: {
+          street: '456 Oak Avenue',
+          city,
+          state,
+          zip: '78702'
+        },
+        price: 525000,
+        bedrooms: 3,
+        bathrooms: 2.5,
+        square_feet: 2400,
+        property_type: 'house',
+        listing_status: 'active',
+        listing_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        description: 'Charming family home in quiet neighborhood',
+        features: ['Large Backyard', 'Updated Kitchen', 'Hardwood Floors'],
+        images: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994']
+      },
+      {
+        mls_number: `MLS${Date.now()}3`,
+        address: {
+          street: '789 Downtown Loft',
+          city,
+          state,
+          zip: '78703'
+        },
+        price: 425000,
+        bedrooms: 2,
+        bathrooms: 2,
+        square_feet: 1800,
+        property_type: 'condo',
+        listing_status: 'active',
+        listing_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        description: 'Modern downtown condo with city views',
+        features: ['City Views', 'Gym', 'Concierge', 'Rooftop Deck'],
+        images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688']
+      }
+    ];
+    
+    for (const property of sampleProperties) {
+      const ref = db.collection('properties').doc();
+      batch.set(ref, {
+        ...property,
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    
+    await batch.commit();
+    console.log(`Created ${sampleProperties.length} sample properties for ${city}, ${state}`);
+  }
+  
   
   /**
    * Save property search for user
